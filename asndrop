@@ -38,7 +38,14 @@ check_running_as_root()
 
 display_help()
 {
-	printf "\n[ HELP SECTION ]\n"
+	cat <<EOF
+Usage: $(basename "$0") [options]
+
+  create  Query ASN(s) for IP subnetworks and create new firewall drop rules.
+  delete  Delete firewall drop rules.
+  undrop  Temporarily disregard current firewall drop rules.
+  redrop  Reinstate current firewall drop rules.
+EOF
 }
 
 # = TASK =>
@@ -62,7 +69,7 @@ then
 		CHAIN_ALREADYEXISTS=true
 	}
 
-	if [ "$CHAIN_ALREADYEXISTS" = true ] 
+	if [ "$CHAIN_ALREADYEXISTS" = true ]
 	then
 		exit 1
 	fi
@@ -74,7 +81,7 @@ then
 	iptables -F "$CHAIN"
 	iptables -C INPUT -j "$CHAIN" 2> /dev/null && iptables -D INPUT -j "$CHAIN" 2> /dev/null
 	iptables -X "$CHAIN"
-	
+
 	ip6tables -F "$CHAIN"
 	ip6tables -C INPUT -j "$CHAIN" 2> /dev/null && ip6tables -D INPUT -j "$CHAIN" 2> /dev/null
 	ip6tables -X "$CHAIN"
@@ -105,7 +112,7 @@ then
 
 	iptables-save 1> /dev/null
 	ip6tables-save 1> /dev/null
-	
+
 	exit
 
 else
@@ -145,7 +152,7 @@ LIST_IPBLOCK_6=$(
 [ $(printf "$LIST_IPBLOCK_4" | wc -l) -ne 0 ] &&
 {
 	# Create and Clear Firewall Chain:
-	
+
 	iptables -N "$CHAIN"
 	iptables -A INPUT -j "$CHAIN"
 	iptables -F "$CHAIN"
@@ -158,7 +165,7 @@ LIST_IPBLOCK_6=$(
 	done
 
 	# Save Firewall Configuration:
-	
+
 	iptables-save 1> /dev/null
 }
 
@@ -178,9 +185,8 @@ LIST_IPBLOCK_6=$(
 	done
 
 	# Save Firewall Configuration:
-	
+
 	ip6tables-save 1> /dev/null
 }
 
 exit
-
