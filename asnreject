@@ -1,0 +1,200 @@
+#!/bin/sh
+
+set -u
+
+# = VARS =>
+
+CHAIN="ASNREJECT"  # `iptables` firewall chain for script.
+WHOISDOMAIN="whois.radb.net"  # WHOIS domain used to query ASNs.
+PATHFILE_CONFIG="/usr/local/etc/asnreject.conf"
+CHAIN_ALREADYEXISTS=false  # Whether `iptables` firewall chain already exists.
+ASNLIST=""  # Array of ASN subnetworks to query.
+
+# = FUNC =>
+
+check_requirements()
+{
+	[ -f "$1" ] || {
+		printf "* INFO: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
+		touch "$1" && chown 0:0 "$1" && chmod 600 "$1"
+		return 1
+	}
+
+	cat "$1" | egrep -qo "^AS[^ ]+" || {
+		printf "* ERROR: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
+		return 2
+	}
+
+	which iptables 2>&1 > /dev/null || {
+		printf "* ERROR: \"iptables\" is a prerequisite and was not found.\n"
+		return 2
+	}
+
+	return 0
+}
+
+check_running_as_root()
+{
+	if [ `id -u` -ne 0 ]
+	then
+		printf "* ERROR: $(basename "$0") not running as root.\n"
+		return 2
+	fi
+}
+
+display_help()
+{
+	cat <<EOF
+Usage: $(basename "$0") [options]
+
+  create  Query ASN(s) for IP subnetworks and create new firewall reject rules.
+  delete  Delete firewall reject rules.
+  stop    Temporarily disregard current firewall reject rules.
+  resume  Reinstate current firewall reject rules.
+EOF
+}
+
+# = TASK =>
+
+if [ "$*" = "create" ]
+then
+	check_running_as_root || exit $?
+	check_requirements "$PATHFILE_CONFIG" || exit $?
+
+	ASNLIST=$(cat "$PATHFILE_CONFIG" | egrep -qo "^AS[^ ]+")
+
+	# Confirm Existence of Firewall Chain:
+
+	iptables -C OUTPUT -j "$CHAIN" 2> /dev/null && {
+		printf "* ERROR: iptables (IPv4) firewall chain \"%s\" already exists.\n" "$CHAIN"
+		CHAIN_ALREADYEXISTS=true
+	}
+
+	ip6tables -C OUTPUT -j "$CHAIN" 2> /dev/null && {
+		printf "* ERROR: iptables (IPv6) firewall chain \"%s\" already exists.\n" "$CHAIN"
+		CHAIN_ALREADYEXISTS=true
+	}
+
+	if [ "$CHAIN_ALREADYEXISTS" = true ]
+	then
+		printf "* INFO: Redo chain creation process with \"delete\" and \"create\" arguments.\n"
+		exit 1
+	fi
+
+elif [ "$*" = "delete" ]
+then
+	check_running_as_root || exit $?
+
+	iptables -F "$CHAIN"
+	iptables -C OUTPUT -j "$CHAIN" 2> /dev/null && iptables -D OUTPUT -j "$CHAIN" 2> /dev/null
+	iptables -X "$CHAIN"
+
+	ip6tables -F "$CHAIN"
+	ip6tables -C OUTPUT -j "$CHAIN" 2> /dev/null && ip6tables -D OUTPUT -j "$CHAIN" 2> /dev/null
+	ip6tables -X "$CHAIN"
+
+	iptables-save 1> /dev/null
+	ip6tables-save 1> /dev/null
+
+	exit
+
+elif [ "$*" = "resume" ]
+then
+	check_running_as_root || exit $?
+
+	iptables -A OUTPUT -j "$CHAIN"
+	ip6tables -A OUTPUT -j "$CHAIN"
+
+	iptables-save 1> /dev/null
+	ip6tables-save 1> /dev/null
+
+	exit
+
+elif [ "$*" = "stop" ]
+then
+	check_running_as_root || exit $?
+
+	iptables -D OUTPUT -j "$CHAIN"
+	ip6tables -D OUTPUT -j "$CHAIN"
+
+	iptables-save 1> /dev/null
+	ip6tables-save 1> /dev/null
+
+	exit
+
+else
+	display_help
+	exit 1
+fi
+
+# Confirm Existence of Listed ASNs:
+
+echo "$ASNLIST" | while IFS= read -r ASN
+do
+	whois -h "$WHOISDOMAIN" -i origin "$ASN" | egrep -q '^route\:' || {
+		printf "* WARN: Query of ASN \"%s\" did not return IPv4 subnetwork results.\n" "$ASN"
+	}
+
+	whois -h "$WHOISDOMAIN" -i origin "$ASN" | egrep -q '^route6\:' || {
+		printf "* WARN: Query of ASN \"%s\" did not return IPv6 subnetwork results.\n" "$ASN"
+	}
+done
+
+# Get List of ASN Subnetworks:
+
+LIST_IPBLOCK_4=$(
+	echo "$ASNLIST" | while IFS= read -r ASN
+	do
+		whois -h "$WHOISDOMAIN" -i origin "$ASN" | egrep '^route\:' | awk '{print $2}'
+	done
+)
+
+LIST_IPBLOCK_6=$(
+	echo "$ASNLIST" | while IFS= read -r ASN
+	do
+		whois -h "$WHOISDOMAIN" -i origin "$ASN" | egrep '^route6\:' | awk '{print $2}'
+	done
+)
+
+[ $(printf "$LIST_IPBLOCK_4" | wc -l) -ne 0 ] &&
+{
+	# Create and Clear Firewall Chain:
+
+	iptables -N "$CHAIN"
+	iptables -A OUTPUT -j "$CHAIN"
+	iptables -F "$CHAIN"
+
+	# Add Rule to Reject ASN Subnetworks:
+
+	echo "$LIST_IPBLOCK_4" | while IFS= read -r SUBNET
+	do
+		iptables -A "$CHAIN" -d "$SUBNET" -j REJECT
+	done
+
+	# Save Firewall Configuration:
+
+	iptables-save 1> /dev/null
+}
+
+[ $(printf "$LIST_IPBLOCK_6" | wc -l) -ne 0 ] &&
+{
+	# Create and Clear Firewall Chain:
+
+	ip6tables -N "$CHAIN"
+	ip6tables -A OUTPUT -j "$CHAIN"
+	ip6tables -F "$CHAIN"
+
+	# Add Rule to Reject ASN Subnetworks:
+
+	echo "$LIST_IPBLOCK_6" | while IFS= read -r SUBNET
+	do
+		ip6tables -A "$CHAIN" -d "$SUBNET" -j REJECT
+	done
+
+	# Save Firewall Configuration:
+
+	ip6tables-save 1> /dev/null
+}
+
+exit
+
