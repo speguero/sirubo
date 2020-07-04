@@ -61,7 +61,7 @@ then
 	check_running_as_root || exit $?
 	check_requirements "$PATHFILE_CONFIG" || exit $?
 
-	ASNLIST=$(cat "$PATHFILE_CONFIG" | egrep -qo "^AS[^ ]+")
+	ASNLIST=$(cat "$PATHFILE_CONFIG" | egrep -o "^AS[^ ]+")
 
 	# Confirm Existence of Firewall Chain:
 
