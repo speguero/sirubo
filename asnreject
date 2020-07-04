@@ -21,12 +21,12 @@ check_requirements()
 	}
 
 	cat "$1" | egrep -qo "^AS[^ ]+" || {
-		printf "* ERROR: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
+		>&2 printf "* ERROR: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
 		return 2
 	}
 
 	which iptables 2>&1 > /dev/null || {
-		printf "* ERROR: \"iptables\" is a prerequisite and was not found.\n"
+		>&2 printf "* ERROR: \"iptables\" is a prerequisite and was not found.\n"
 		return 2
 	}
 
@@ -37,7 +37,7 @@ check_running_as_root()
 {
 	if [ `id -u` -ne 0 ]
 	then
-		printf "* ERROR: $(basename "$0") not running as root.\n"
+		>&2 printf "* ERROR: $(basename "$0") not running as root.\n"
 		return 2
 	fi
 }
@@ -66,18 +66,18 @@ then
 	# Confirm Existence of Firewall Chain:
 
 	iptables -C OUTPUT -j "$CHAIN" 2> /dev/null && {
-		printf "* ERROR: iptables (IPv4) firewall chain \"%s\" already exists.\n" "$CHAIN"
+		>&2 printf "* ERROR: iptables (IPv4) firewall chain \"%s\" already exists.\n" "$CHAIN"
 		CHAIN_ALREADYEXISTS=true
 	}
 
 	ip6tables -C OUTPUT -j "$CHAIN" 2> /dev/null && {
-		printf "* ERROR: iptables (IPv6) firewall chain \"%s\" already exists.\n" "$CHAIN"
+		>&2 printf "* ERROR: iptables (IPv6) firewall chain \"%s\" already exists.\n" "$CHAIN"
 		CHAIN_ALREADYEXISTS=true
 	}
 
 	if [ "$CHAIN_ALREADYEXISTS" = true ]
 	then
-		printf "* INFO: Redo chain creation process with \"delete\" and \"create\" arguments.\n"
+		>&2 printf "* INFO: Redo chain creation process with \"delete\" and \"create\" arguments.\n"
 		exit 1
 	fi
 
@@ -132,11 +132,11 @@ fi
 echo "$ASNLIST" | while IFS= read -r ASN
 do
 	whois -h "$WHOISDOMAIN" -i origin "$ASN" | egrep -q '^route\:' || {
-		printf "* WARN: Query of ASN \"%s\" did not return IPv4 subnetwork results.\n" "$ASN"
+		>&2 printf "* WARN: Query of ASN \"%s\" did not return IPv4 subnetwork results.\n" "$ASN"
 	}
 
 	whois -h "$WHOISDOMAIN" -i origin "$ASN" | egrep -q '^route6\:' || {
-		printf "* WARN: Query of ASN \"%s\" did not return IPv6 subnetwork results.\n" "$ASN"
+		>&2 printf "* WARN: Query of ASN \"%s\" did not return IPv6 subnetwork results.\n" "$ASN"
 	}
 done
 
