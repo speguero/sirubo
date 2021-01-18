@@ -1,6 +1,6 @@
 # **asndrop**
 
-`asndrop` is a `nftables` wrapper whose intended purpose is to protect one's privacy from big tech conglomerates, which is achieved by using your operating system's firewall to drop outgoing traffic to IP addresses that exist within their ASN-associated subnetworks.
+`asndrop` is a firewall wrapper whose intended purpose is to protect one's privacy from big tech conglomerates, which is achieved by using your operating system's firewall to drop outgoing traffic to IP addresses that exist within their ASN-associated subnetworks.
 
 - [Install](#install)
 - [Uninstall](#uninstall)
