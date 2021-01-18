@@ -38,9 +38,8 @@ main()
 
 		if [ "$(uname -s)" = "Linux" ]
 		then
-			rm -f     "$fpath_ruleset"
-			touch     "$fpath_ruleset"
-			chown 0:0 "$fpath_ruleset"
+			rm -f "$fpath_ruleset"
+			touch "$fpath_ruleset"
 
 			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset"
 			printf "add table inet $name_program\n"                                                                       >> "$fpath_ruleset"
@@ -96,7 +95,7 @@ main()
 
 			# Create Service for Ruleset Persistency:
 
-			print_systemd_unit_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service_linux"
+			print_linux_systemd_unit_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service_linux"
 			systemctl -q daemon-reload
 			systemctl -q reenable "$fname_service_linux"
 
@@ -110,15 +109,23 @@ main()
 
 	[ "$*" = "resume" ] &&
 	{
-		systemctl -q enable "$fname_service_linux"
-		nft -f "$fpath_ruleset"
+		if [ "$(uname -s)" = "Linux" ]
+		then
+			systemctl -q enable "$fname_service_linux"
+			nft -f "$fpath_ruleset"
+		fi
+
 		exit
 	}
 
 	[ "$*" = "stop" ] &&
 	{
-		systemctl -q disable "$fname_service_linux"
-		nft delete table inet "$name_program" 2> /dev/null
+		if [ "$(uname -s)" = "Linux" ]
+		then
+			systemctl -q disable "$fname_service_linux"
+			nft delete table inet "$name_program" 2> /dev/null
+		fi
+
 		exit
 	}
 }
@@ -172,7 +179,7 @@ Usage: $(basename "$0") [options]
 EOF
 }
 
-print_systemd_unit_file()
+print_linux_systemd_unit_file()
 {
 	local name_program="$1"
 	local fpath_ruleset="$2"
