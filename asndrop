@@ -61,14 +61,14 @@ main()
 
 			# Perform WHOIS Query of ASN for Associated Subnetworks:
 
-			local list_ipblock_4=$(
+			list_ipblock_4=$(
 				echo "$asnlist" | while IFS= read -r asn
 				do
 					whois -h "$whoisdomain" -i origin "$asn" | egrep '^route\:' | awk '{print $2}'
 				done
 			)
 
-			local list_ipblock_6=$(
+			list_ipblock_6=$(
 				echo "$asnlist" | while IFS= read -r asn
 				do
 					whois -h "$whoisdomain" -i origin "$asn" | egrep '^route6\:' | awk '{print $2}'

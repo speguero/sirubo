@@ -1,0 +1,15 @@
+image: debian/stable
+packages:
+  - nftables
+  - whois
+sources:
+  - https://git.sr.ht/~speguero/asndrop
+shell: true
+tasks:
+  - build: |
+      sudo touch /usr/local/etc/asndrop.conf
+      sudo chmod 666 /usr/local/etc/asndrop.conf
+      echo AS32934 > /usr/local/etc/asndrop.conf
+      sudo sh ./asndrop/asndrop create
+      ping -c 1 facebook.com || exit
+      exit 1
