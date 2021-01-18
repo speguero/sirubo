@@ -1,0 +1,10 @@
+[Unit]
+Description=asnreject
+After=nftables.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nft -f "/usr/local/etc/asnreject.rulelist"
+
+[Install]
+WantedBy=multi-user.target
