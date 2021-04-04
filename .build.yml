@@ -3,13 +3,13 @@ packages:
   - nftables
   - whois
 sources:
-  - https://git.sr.ht/~speguero/asndrop
+  - https://git.sr.ht/~speguero/sirubo
 shell: true
 tasks:
   - build: |
-      sudo touch /usr/local/etc/asndrop.conf
-      sudo chmod 666 /usr/local/etc/asndrop.conf
-      echo AS32934 > /usr/local/etc/asndrop.conf
-      sudo sh ./asndrop/asndrop create
+      sudo touch /usr/local/etc/sirubo.conf
+      sudo chmod 666 /usr/local/etc/sirubo.conf
+      echo AS32934 > /usr/local/etc/sirubo.conf
+      sudo sh ./sirubo/sirubo create
       ping -c 1 facebook.com || exit
       exit 1
