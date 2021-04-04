@@ -118,6 +118,10 @@ make clean
 </ol>
 
 <br>
+<h3>Previews</h3>
+<p>Refer to <code>preview</code> GIF files located within the <code>src/</code> directory for recorded examples of this project's use case.</p>
+
+<br>
 <h3>License</h3>
 
 <p>Refer to the LICENSE file for details.
