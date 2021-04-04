@@ -48,9 +48,12 @@ Dissecting the admittedly deliberate etymology of <i>sirubo (pronounced as <u>se
 
 <br>
 <h3>Requirements</h3>
-<ul>
-<li>Linux (<i>nftables</i>)</li>
-</ul>
+<table style="max-width: 75%; text-align: left; border: 1px solid black; padding: 10px;">
+<tr><th style="padding-bottom: 10px; border-bottom: 1px solid black;">Linux</th></tr>
+<tr><td style="padding-top: 10px;"><code>nftables</code></td></tr>
+<tr><td><code>systemd</code></td></tr>
+<tr><td><code>whois</code></td></tr>
+</table>
 
 <br>
 <h3>Installing</h3>
