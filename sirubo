@@ -13,6 +13,8 @@ main()
 	local fname_service_linux="$name_program.service"
 	local asnlist=""
 
+	printf "\n"
+
 	[ "$*" = "" ] &&
 	{
 		print_help
@@ -50,19 +52,22 @@ main()
 
 			until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
 			do
+				printf "  info: Cannot ping \"%s\". Waiting for network connection before proceeding...\r" "$whoisdomain"
 				sleep 1
 			done
+
+			printf "\n"
 
 			# Verify Existence of User-Specified ASNs:
 
 			echo "$asnlist" | while IFS= read -r asn
 			do
 				whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route\:' || {
-					>&2 printf "* WARN: ASN \"%s\" did not return IPv4 subnetwork results.\n" "$asn"
+					>&2 printf "> warn: ASN \"%s\" did not return IPv4 results.\n" "$asn"
 				}
 
 				whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route6\:' || {
-					>&2 printf "* WARN: ASN \"%s\" did not return IPv6 subnetwork results.\n" "$asn"
+					>&2 printf "> warn: ASN \"%s\" did not return IPv6 results.\n" "$asn"
 				}
 			done
 
@@ -142,7 +147,7 @@ main()
 check_requirements()
 {
 	[ -f "$1" ] || {
-		printf "* INFO: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
+		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
 		touch "$1" && \
 			chown 0:0 "$1" && \
 			chmod 600 "$1"
@@ -150,17 +155,17 @@ check_requirements()
 	}
 
 	cat "$1" | egrep -qo "^AS[^ ]+" || {
-		>&2 printf "* ERROR: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
+		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
 		return 2
 	}
 
 	uname -s | grep -q 'Linux' && which nft 2>&1 > /dev/null || {
-		>&2 printf "* ERROR: \"nft\" is a prerequisite and was not found.\n"
+		>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
 		return 2
 	}
 
 	uname -s | grep -q 'Linux' && which whois 2>&1 > /dev/null || {
-		>&2 printf "* ERROR: \"whois\" is a prerequisite and was not found.\n"
+		>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
 		return 2
 	}
 
@@ -171,7 +176,7 @@ check_running_as_root()
 {
 	if [ `id -u` -ne 0 ]
 	then
-		>&2 printf "* ERROR: $(basename "$0") not running as root.\n"
+		>&2 printf "> error: $(basename "$0") not running as root.\n"
 		return 2
 	fi
 }
