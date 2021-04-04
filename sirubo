@@ -3,11 +3,13 @@
 main()
 {
 	set -u
+	set -e
 	umask u=rw,go=
 
-	local name_program="asndrop"
+	local name_program="sirubo"
 	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN subnetworks.
 	local fpath_ruleset="/usr/local/etc/$name_program.ruleset"
+	local fpath_ruleset_tmp="/usr/local/etc/$name_program.ruleset.tmp"
 	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local fname_service_linux="$name_program.service"
 	local asnlist=""
@@ -38,13 +40,12 @@ main()
 
 		if [ "$(uname -s)" = "Linux" ]
 		then
-			rm -f "$fpath_ruleset"
-			touch "$fpath_ruleset"
+			touch "$fpath_ruleset_tmp"
 
-			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset"
-			printf "add table inet $name_program\n"                                                                       >> "$fpath_ruleset"
-			printf "flush table inet $name_program\n"                                                                     >> "$fpath_ruleset"
-			printf "add chain inet $name_program $name_program { type filter hook output priority 0 ; policy accept; }\n" >> "$fpath_ruleset"
+			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset_tmp"
+			printf "add table inet $name_program\n"                                                                       >> "$fpath_ruleset_tmp"
+			printf "flush table inet $name_program\n"                                                                     >> "$fpath_ruleset_tmp"
+			printf "add chain inet $name_program $name_program { type filter hook output priority 0 ; policy accept; }\n" >> "$fpath_ruleset_tmp"
 
 			# Verify Existence of User-Specified ASNs:
 
@@ -81,7 +82,7 @@ main()
 			{
 				echo "$list_ipblock_4" | while IFS= read -r subnet
 				do
-					printf "add rule inet $name_program $name_program ip daddr $subnet drop\n" >> "$fpath_ruleset"
+					printf "add rule inet $name_program $name_program ip daddr $subnet reject\n" >> "$fpath_ruleset_tmp"
 				done
 			}
 
@@ -89,7 +90,7 @@ main()
 			{
 				echo "$list_ipblock_6" | while IFS= read -r subnet
 				do
-					printf "add rule inet $name_program $name_program ip6 daddr $subnet drop\n" >> "$fpath_ruleset"
+					printf "add rule inet $name_program $name_program ip6 daddr $subnet reject\n" >> "$fpath_ruleset_tmp"
 				done
 			}
 
@@ -101,6 +102,7 @@ main()
 
 			# Load Firewall Ruleset:
 
+			mv -f "$fpath_ruleset_tmp" "$fpath_ruleset"
 			nft -f "$fpath_ruleset"
 		fi
 
@@ -170,12 +172,12 @@ check_running_as_root()
 print_help()
 {
 	cat <<EOF
-Usage: $(basename "$0") [options]
+Usage: $(basename "$0") [command]
 
-  help    This very message.
-  create  Generate firewall drop rules.
-  stop    Undo firewall drop rules.
-  resume  Resume enforcement of cached firewall drop rules.
+  help      This very message.
+  create    Generate firewall reject rules.
+  stop      Undo firewall reject rules.
+  resume    Resume enforcement of cached firewall reject rules.
 EOF
 }
 
@@ -186,11 +188,12 @@ print_linux_systemd_unit_file()
 
 	cat <<EOF
 [Unit]
-Description=$name_program
-After=nftables.service
+Description=$name_program - ASN IP outbound traffic blocker
+After=network-online.target
 
 [Service]
 Type=oneshot
+ExecStartPre=sirubo create
 ExecStart=/usr/sbin/nft -f "$fpath_ruleset"
 
 [Install]
