@@ -164,6 +164,11 @@ check_requirements()
 		return 2
 	}
 
+	uname -s | grep -q 'Linux' && which systemd 2>&1 > /dev/null || {
+		>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
+		return 2
+	}
+
 	uname -s | grep -q 'Linux' && which whois 2>&1 > /dev/null || {
 		>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
 		return 2
