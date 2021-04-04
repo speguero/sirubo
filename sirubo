@@ -9,7 +9,6 @@ main()
 	local name_program="sirubo"
 	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN subnetworks.
 	local fpath_ruleset="/usr/local/etc/$name_program.ruleset"
-	local fpath_ruleset_tmp="/usr/local/etc/$name_program.ruleset.tmp"
 	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local fname_service_linux="$name_program.service"
 	local asnlist=""
@@ -40,12 +39,12 @@ main()
 
 		if [ "$(uname -s)" = "Linux" ]
 		then
-			touch "$fpath_ruleset_tmp"
+			touch "$fpath_ruleset.tmp"
 
-			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset_tmp"
-			printf "add table inet $name_program\n"                                                                       >> "$fpath_ruleset_tmp"
-			printf "flush table inet $name_program\n"                                                                     >> "$fpath_ruleset_tmp"
-			printf "add chain inet $name_program $name_program { type filter hook output priority 0 ; policy accept; }\n" >> "$fpath_ruleset_tmp"
+			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset.tmp"
+			printf "add table inet $name_program\n"                                                                       >> "$fpath_ruleset.tmp"
+			printf "flush table inet $name_program\n"                                                                     >> "$fpath_ruleset.tmp"
+			printf "add chain inet $name_program $name_program { type filter hook output priority 0 ; policy accept; }\n" >> "$fpath_ruleset.tmp"
 
 			# Wait for Active Network if Not Present:
 
@@ -89,7 +88,7 @@ main()
 			{
 				echo "$list_ipblock_4" | while IFS= read -r subnet
 				do
-					printf "add rule inet $name_program $name_program ip daddr $subnet reject\n" >> "$fpath_ruleset_tmp"
+					printf "add rule inet $name_program $name_program ip daddr $subnet reject\n" >> "$fpath_ruleset.tmp"
 				done
 			}
 
@@ -97,7 +96,7 @@ main()
 			{
 				echo "$list_ipblock_6" | while IFS= read -r subnet
 				do
-					printf "add rule inet $name_program $name_program ip6 daddr $subnet reject\n" >> "$fpath_ruleset_tmp"
+					printf "add rule inet $name_program $name_program ip6 daddr $subnet reject\n" >> "$fpath_ruleset.tmp"
 				done
 			}
 
@@ -109,7 +108,8 @@ main()
 
 			# Load Firewall Ruleset:
 
-			mv -f "$fpath_ruleset_tmp" "$fpath_ruleset"
+			mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
+			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			nft -f "$fpath_ruleset"
 		fi
 
