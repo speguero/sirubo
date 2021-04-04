@@ -1,97 +1,131 @@
-# **asndrop**
+<h1>sirubo</h1>
+<p style="line-height: 165%;">ASN IP (big tech conglomerate) outbound traffic blocker.</p>
+<a href="https://peguero.xyz/project/sirubo">https://peguero.xyz/project/sirubo</a>
 
-`asndrop` is a firewall wrapper with an intended purpose of protecting one's privacy from big tech conglomerates, achieved by using your operating system's firewall to drop outgoing traffic to IP addresses that exist within the realm of their ASN subnetworks.
+<br>
+<h3>Usage</h3>
 
-- [Install](#install)
-- [Uninstall](#uninstall)
-- [Arguments](#arguments)
-- [To-Do](#to-do)
-- [Contributing](#contributing)
-- [License](#license)
+<code>sirubo [command]</code>
+<br>
 
-## Install
+<ol>
+<table style="width: 100%;">
+<tr>
+	<td><code>[none]</code></td>
+	<td>Display help.</td>
+</tr>
+<tr>
+	<td><code>help</code></td>
+	<td>Display help.</td>
+</tr>
+<tr>
+	<td><code>create</code></td>
+	<td>Generate firewall reject rules.</td>
+</tr>
+<tr>
+	<td><code>stop</code></td>
+	<td>Undo firewall reject rules.</td>
+</tr>
+<tr>
+	<td><code>resume</code></td>
+	<td>Resume enforcement of cached firewall reject rules.</td>
+</tr>
+</table>
+</ol>
 
-__1)__ Install `asndrop` and its configuration file:
+<br>
+<h3>Purpose</h3>
 
-```
+<p>
+Preventing passive and nonconsensual telemetry, and the infringement of one's privacy thereafter, from impertinently inquisitive big tech conglomerates, such as Facebook and Alphabet (Google).
+</p>
+
+<br>
+<h3>Name Origin</h3>
+<p>
+Dissecting the admittedly deliberate etymology of <i>sirubo (pronounced as <u>seer-rue-bow</u>)</i>, <i>"si"</i> references silicon's chemical symbol, <b>Si</b>, which serves as a subtle reference to Silicon Valley thereafter. <i>"rubo"</i> is a word of the universal auxiliary language of <a href="https://wikipedia.org/wiki/Esperanto">Esperanto</a>, meaning <i>"trash"</i> or <i>"garbage."</i>
+</p>
+
+<br>
+<h3>Requirements</h3>
+<ul>
+<li>Linux (<i>nftables</i>)</li>
+</ul>
+
+<br>
+<h3>Installing</h3>
+<ol>
+<li>Install <i>sirubo</i> and its configuration file:</li>
+
+<pre>
 sudo make
-```
+</pre>
 
-__2)__ Edit the configuration file to add one ASN per line, such as "[AS15169](https://www.radb.net/query?keywords=AS15169)":
+<li>Open the configuration file:</li>
 
-```
-sudo $editor_of_choice /usr/local/etc/asndrop.conf
-```
+<pre>
+sudo $editor_of_choice /usr/local/etc/sirubo.conf
+</pre>
 
-And ensure ASNs are listed in this fashion:
+<p>And add at least one ASN. Ensure ASNs are listed in this fashion:</p>
 
-```
+<pre>
 AS15169
-AS123
-AS456
-```
+AS32934
+AS8075
+</pre>
 
-__3)__ Create new firewall drop rules:
+<li>Create new firewall reject rules:</li>
 
-```
-sudo asndrop create
-```
+<pre>
+sudo sirubo create
+</pre>
 
-__4)__ Ping a domain name whose IP address is part of a targeted ASN and verify it is being blocked:
+<li>Ping a domain name whose IP address is associated with a specified ASN and confirm the rejection of outbound ICMP packets:</li>
 
-```
+<pre>
 ping -c 1 example.com
-```
+</pre>
 
-Which should display messages such as these:
+<p>Which should print output such as this:</p>
 
-```
+<pre>
 icmp_seq=1 Destination Port Unreachable
 ping: sendmsg: Operation not permitted
 1 packets transmitted, 0 received, +1 errors, 100% packet loss, time 0m
-```
+</pre>
 
-These messages indicate that outgoing traffic to `example.com` is being dropped.
+<p>This will indicate that outbound traffic to <code>example.com</code> is being rejected.</p>
 
-## Uninstall
+</ol>
 
-From this repository, run the following to remove `asndrop`:
+<br>
+<h3>Uninstalling</h3>
 
-```
+<ol>
+<li>From its git repository, run the following to uninstall <i>sirubo</i>:
+
+<pre>
 make uninstall
-```
+</pre>
 
-Or run the following to remove both `asndrop` and its configuration file:
+<p>Or run the following to uninstall <i>sirubo</i> and delete its configuration file:</p>
 
-```
+<pre>
 make clean
-```
+</pre>
+</ol>
 
-## Arguments
+<br>
+<h3>License</h3>
+<pre>
+The MIT License (MIT)
 
-Arguments | Description
----       | ---
-[none]    | Display help.
-`help`    | Display help.
-`create`  | Generate firewall drop rules.
-`stop`    | Undo firewall drop rules.
-`resume`  | Resume enforcement of cached firewall drop rules.
+Copyright © 2021 Steven Peguero
 
-## To-Do
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-Access the [ticket tracker](https://todo.sr.ht/~speguero/tracker?search=label:%22todo%22%20%5Basndrop%5D) for details.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-## Contributing
-
-Contributions are welcome!
-
-Submit __patches__ via email at [~speguero/patch@lists.sr.ht](mailto:~speguero/patch@lists.sr.ht) using [git-send-email](https://git-send-email.io). Include `[asndrop]` at the beginning of your subject line.
-
-Submit __issue__, __question__ and __suggestion__ tickets as a [SourceHut registered user](https://todo.sr.ht/~speguero/tracker) or via email at [~speguero/tracker@todo.sr.ht](mailto:~speguero/tracker@todo.sr.ht). Include `[asndrop]` at the beginning of your subject line.
-
-Items submitted to mirror repositories on GitHub and GitLab will be ignored.
-
-## License
-
-Access the `LICENSE` file for details.
-
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</pre>
