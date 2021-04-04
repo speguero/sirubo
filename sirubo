@@ -48,15 +48,21 @@ main()
 			printf "flush table inet $name_program\n"                                                                     >> "$fpath_ruleset.tmp"
 			printf "add chain inet $name_program $name_program { type filter hook output priority 0 ; policy accept; }\n" >> "$fpath_ruleset.tmp"
 
-			# Wait for Active Network if Not Present:
+			# Wait for Network Connection if Not Present:
+			
+			ping_loop=0
 
 			until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
 			do
+				ping_loop=1
 				printf "  info: Cannot ping \"%s\". Waiting for network connection before proceeding...\r" "$whoisdomain"
 				sleep 1
 			done
 
-			printf "\n"
+			if [ $ping_loop = 1 ]
+			then
+				printf "\n"
+			fi
 
 			# Verify Existence of User-Specified ASNs:
 
