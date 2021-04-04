@@ -13,8 +13,6 @@ main()
 	local fname_service_linux="$name_program.service"
 	local asnlist=""
 
-	printf "\n"
-
 	[ "$*" = "" ] &&
 	{
 		print_help
