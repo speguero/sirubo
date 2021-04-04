@@ -55,7 +55,7 @@ main()
 			until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
 			do
 				ping_loop=1
-				printf "  info: Cannot ping \"%s\". Waiting for network connection before proceeding...\r" "$whoisdomain"
+				printf "  info: Cannot ping \"%s\". Will not proceed until I can...\r" "$whoisdomain"
 				sleep 1
 			done
 
