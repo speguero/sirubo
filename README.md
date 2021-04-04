@@ -58,7 +58,7 @@ Dissecting the admittedly deliberate etymology of <i>sirubo (pronounced as <u>se
 <br>
 <h3>Installing</h3>
 <ol>
-<li>Install <i>sirubo</i> and its configuration file:</li>
+<li>Install sirubo and create a configuration file:</li>
 
 <pre>
 sudo make
@@ -78,41 +78,39 @@ AS32934
 AS8075
 </pre>
 
-<li>Create new firewall reject rules:</li>
+<li>Generate a new firewall ruleset:</li>
 
 <pre>
 sudo sirubo create
 </pre>
 
-<li>Ping a domain name whose IP address is associated with a specified ASN and confirm the rejection of outbound ICMP packets:</li>
+<li>To test your new firewall ruleset, attempt to open a TCP connection with a domain name or IP address associated with a specified ASN:</li>
 
 <pre>
-ping -c 1 example.com
+nc -v example.com 443
 </pre>
 
 <p>Which should print output such as this:</p>
 
 <pre>
-icmp_seq=1 Destination Port Unreachable
-ping: sendmsg: Operation not permitted
-1 packets transmitted, 0 received, +1 errors, 100% packet loss, time 0m
+nc: connect to example.com (0.0.0.0) port 443 (tcp) failed: Connection refused
 </pre>
 
-<p>This will indicate that outbound traffic to <code>example.com</code> is being rejected.</p>
+<p>This will indicate that your firewall is configured to reject outbound traffic to <code>example.com</code>.</p>
 
+<p>Bon appétit, baby.</p>
 </ol>
 
 <br>
 <h3>Uninstalling</h3>
-
 <ol>
-<li>From its git repository, run the following to uninstall <i>sirubo</i>:
+<li>From its git repository, run the following to uninstall sirubo:
 
 <pre>
 make uninstall
 </pre>
 
-<p>Or run the following to uninstall <i>sirubo</i> and delete its configuration file:</p>
+<p>Or run the following to uninstall sirubo and delete its configuration file:</p>
 
 <pre>
 make clean
