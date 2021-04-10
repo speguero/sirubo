@@ -88,7 +88,7 @@ main()
 			{
 				echo "$list_prefixes_ipv6" | while IFS= read -r prefix
 				do
-					printf "block return on any inet from any to $prefix\n" >> "$fpath_ruleset.tmp"
+					printf "block return on any inet6 from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
 			}
 
