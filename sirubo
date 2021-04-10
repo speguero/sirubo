@@ -15,7 +15,7 @@ main()
 
 	if [ "$(uname -s)" = "OpenBSD" ]
 	then
-		local fpath_ruleset="/etc/pf/pf.$name_program.conf"
+		local fpath_ruleset="/usr/local/etc/pf.$name_program.conf"
 	fi
 
 	if [ "$(uname -s)" = "Linux" ]
