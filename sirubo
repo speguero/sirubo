@@ -9,8 +9,8 @@ main()
 	umask u=rw,go=
 
 	local list_asn=""
-	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local name_program="sirubo"
+	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
 
 	if [ "$(uname -s)" = "OpenBSD" ]
