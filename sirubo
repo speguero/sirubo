@@ -2,16 +2,33 @@
 
 main()
 {
+	# = VARS =>
+
 	set -u
 	set -e
 	umask u=rw,go=
+	
+	confirm_root_access || exit $?
 
-	local name_program="sirubo"
-	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN subnetworks.
-	local fpath_ruleset="/usr/local/etc/$name_program.ruleset"
-	local fpath_conf="/usr/local/etc/$name_program.conf"
-	local fname_service_linux="$name_program.service"
 	local asnlist=""
+	local fpath_conf="/usr/local/etc/$name_program.conf"
+	local name_program="sirubo"
+	local ping_loop=""
+	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN subnetworks.
+
+	if [ "$(uname -s)" = "OpenBSD" ]
+	then
+		local fpath_ruleset="/etc/pf/pf.$name_program.conf"
+		local fpath_prefixlist="/etc/pf/pf.$name_program.ip.conf"
+	fi
+
+	if [ "$(uname -s)" = "Linux" ]
+	then
+		local fpath_ruleset="/usr/local/etc/$name_program.ruleset"
+		local fname_service="$name_program.service"
+	fi
+
+	# = ARGS =>
 
 	[ "$*" = "" ] &&
 	{
@@ -25,17 +42,28 @@ main()
 		exit 1
 	}
 
-	check_running_as_root || exit $?
-
 	[ "$*" = "create" ] &&
 	{
-		check_requirements "$fpath_conf" || exit $?
+		confirm_requirements "$fpath_conf" || exit $?
 
 		# Import Program Configuration File:
 
 		asnlist=$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")
 
 		# Create Firewall Ruleset Configuration File:
+
+		if [ "$(uname -s)" = "OpenBSD" ]
+		then
+			touch "$fpath_ruleset.tmp"
+			touch "$fpath_prefixlist.tmp"
+
+			printf "table <$name_program> persist file \"$fpath_prefixlist\"" >> "$fpath_ruleset.tmp"
+			printf "block return out quick on any to <$name_program>"         >> "$fpath_ruleset.tmp"
+
+			# Wait for Network Connection if Not Present:
+			
+			confirm_network_connection "$whoisdomain"
+		fi
 
 		if [ "$(uname -s)" = "Linux" ]
 		then
@@ -48,21 +76,9 @@ main()
 
 			# Wait for Network Connection if Not Present:
 			
-			ping_loop=0
+			confirm_network_connection "$whoisdomain"
 
-			until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
-			do
-				ping_loop=1
-				printf "  info: Cannot ping \"%s\". Will not proceed until I can...\r" "$whoisdomain"
-				sleep 1
-			done
-
-			if [ $ping_loop = 1 ]
-			then
-				printf "\n"
-			fi
-
-			# Verify Existence of User-Specified ASNs:
+			# Verify Existence of Specified ASNs:
 
 			echo "$asnlist" | while IFS= read -r asn
 			do
@@ -75,7 +91,7 @@ main()
 				}
 			done
 
-			# Perform WHOIS Query of ASN for Associated Subnetworks:
+			# Perform WHOIS Query of ASN for Associated Prefixes:
 
 			list_ipblock_4=$(
 				echo "$asnlist" | while IFS= read -r asn
@@ -91,7 +107,7 @@ main()
 				done
 			)
 
-			# Add Rules to Drop ASN Subnetworks:
+			# Add Rules to Drop ASN Prefixes:
 
 			[ $(printf "$list_ipblock_4" | wc -l) -ne 0 ] &&
 			{
@@ -111,9 +127,9 @@ main()
 
 			# Create Service for Ruleset Persistency:
 
-			print_linux_systemd_unit_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service_linux"
+			print_linux_systemd_unit_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service"
 			systemctl -q daemon-reload
-			systemctl -q reenable "$fname_service_linux"
+			systemctl -q reenable "$fname_service"
 
 			# Load Firewall Ruleset:
 
@@ -129,7 +145,7 @@ main()
 	{
 		if [ "$(uname -s)" = "Linux" ]
 		then
-			systemctl -q enable "$fname_service_linux"
+			systemctl -q enable "$fname_service"
 			nft -f "$fpath_ruleset"
 		fi
 
@@ -140,7 +156,7 @@ main()
 	{
 		if [ "$(uname -s)" = "Linux" ]
 		then
-			systemctl -q disable "$fname_service_linux"
+			systemctl -q disable "$fname_service"
 			nft delete table inet "$name_program" 2> /dev/null
 		fi
 
@@ -148,7 +164,29 @@ main()
 	}
 }
 
-check_requirements()
+confirm_asn()
+{
+}
+
+confirm_network_connection()
+{
+	local ping_loop=0
+	local whoisdomain="$1"
+
+	until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
+	do
+		ping_loop=1
+		printf "  info: Cannot ping \"%s\". Will not proceed until I can...\r" "$whoisdomain"
+		sleep 1
+	done
+
+	if [ $ping_loop = 1 ]
+	then
+		printf "\n"
+	fi
+}
+
+confirm_requirements()
 {
 	[ -f "$1" ] || {
 		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
@@ -160,6 +198,16 @@ check_requirements()
 
 	cat "$1" | egrep -qo "^AS[^ ]+" || {
 		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
+		return 2
+	}
+
+	uname -s | grep -q 'OpenBSD' && which pfctl 2>&1 > /dev/null || {
+		>&2 printf "> error: \"pfctl\" is a prerequisite and was not found.\n"
+		return 2
+	}
+
+	uname -s | grep -q 'OpenBSD' && which whois 2>&1 > /dev/null || {
+		>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
 		return 2
 	}
 
@@ -181,7 +229,7 @@ check_requirements()
 	return 0
 }
 
-check_running_as_root()
+confirm_root_access()
 {
 	if [ `id -u` -ne 0 ]
 	then
