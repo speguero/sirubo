@@ -217,11 +217,11 @@ confirm_asn()
 
 	echo "$list_asn" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route\:' || {
+		whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route\:' || {
 			>&2 printf "> warn: ASN \"%s\" did not return IPv4 results.\n" "$asn"
 		}
 
-		whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route6\:' || {
+		whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route6\:' || {
 			>&2 printf "> warn: ASN \"%s\" did not return IPv6 results.\n" "$asn"
 		}
 	done
@@ -310,7 +310,7 @@ print_prefixes_ipv4()
 
 	echo "$list_asn" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route\:' | awk '{print $2}'
+		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route:/ {print $2}'
 	done
 }
 
@@ -321,7 +321,7 @@ print_prefixes_ipv6()
 
 	echo "$list_asn" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route6\:' | awk '{print $2}'
+		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route6:/ {print $2}'
 	done
 }
 
