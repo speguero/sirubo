@@ -7,9 +7,6 @@ main()
 	set -u
 	set -e
 	umask u=rw,go=
-	
-	confirm_root_access                 || exit $?
-	confirm_prerequisites "$fpath_conf" || exit $?
 
 	local list_asn=""
 	local fpath_conf="/usr/local/etc/$name_program.conf"
@@ -40,6 +37,9 @@ main()
 		print_help
 		exit 1
 	}
+	
+	confirm_root_access                 || exit $?
+	confirm_prerequisites "$fpath_conf" || exit $?
 
 	[ "$*" = "create" ] &&
 	{
