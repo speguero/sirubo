@@ -8,18 +8,17 @@ main()
 	set -e
 	umask u=rw,go=
 	
-	confirm_root_access || exit $?
+	confirm_root_access                 || exit $?
+	confirm_prerequisites "$fpath_conf" || exit $?
 
-	local asnlist=""
+	local list_asn=""
 	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local name_program="sirubo"
-	local ping_loop=""
-	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN subnetworks.
+	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
 
 	if [ "$(uname -s)" = "OpenBSD" ]
 	then
 		local fpath_ruleset="/etc/pf/pf.$name_program.conf"
-		local fpath_prefixlist="/etc/pf/pf.$name_program.ip.conf"
 	fi
 
 	if [ "$(uname -s)" = "Linux" ]
@@ -44,29 +43,69 @@ main()
 
 	[ "$*" = "create" ] &&
 	{
-		confirm_requirements "$fpath_conf" || exit $?
-
 		# Import Program Configuration File:
 
-		asnlist=$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")
+		list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
 
 		# Create Firewall Ruleset Configuration File:
 
 		if [ "$(uname -s)" = "OpenBSD" ]
 		then
-			touch "$fpath_ruleset.tmp"
-			touch "$fpath_prefixlist.tmp"
+			# Create Anchor in pf.conf:
 
-			printf "table <$name_program> persist file \"$fpath_prefixlist\"" >> "$fpath_ruleset.tmp"
-			printf "block return out quick on any to <$name_program>"         >> "$fpath_ruleset.tmp"
+			cat /etc/pf.conf | egrep -q "^anchor $name_program$" || {
+				printf "anchor $name_program" >> "/etc/pf.conf"
+			}
+
+			# Create Ruleset:
+
+			touch "$fpath_ruleset.tmp"
 
 			# Wait for Network Connection if Not Present:
 			
 			confirm_network_connection "$whoisdomain"
+
+			# Verify Existence of Specified ASNs:
+
+			confirm_asn "$whoisdomain" "$list_asn"
+
+			# Perform WHOIS Query of ASN for Associated Prefixes:
+
+			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
+			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
+
+			# Add Rules to Reject ASN Prefixes:
+
+			[ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ] &&
+			{
+				echo "$list_prefixes_ipv4" | while IFS= read -r prefix
+				do
+					printf "block return on any inet from any to $prefix\n" >> "$fpath_ruleset.tmp"
+				done
+			}
+
+			[ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ] &&
+			{
+				echo "$list_prefixes_ipv6" | while IFS= read -r prefix
+				do
+					printf "block return on any inet from any to $prefix\n" >> "$fpath_ruleset.tmp"
+				done
+			}
+
+			# Create Service for Ruleset Persistency:
+
+			# Load Ruleset:
+
+			mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
+			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
+
+			pfctl -a "$name_program" -f "$fpath_ruleset"
 		fi
 
 		if [ "$(uname -s)" = "Linux" ]
 		then
+			# Create Ruleset:
+
 			touch "$fpath_ruleset.tmp"
 
 			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset.tmp"
@@ -80,48 +119,42 @@ main()
 
 			# Verify Existence of Specified ASNs:
 
-			echo "$asnlist" | while IFS= read -r asn
-			do
-				whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route\:' || {
-					>&2 printf "> warn: ASN \"%s\" did not return IPv4 results.\n" "$asn"
-				}
-
-				whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route6\:' || {
-					>&2 printf "> warn: ASN \"%s\" did not return IPv6 results.\n" "$asn"
-				}
-			done
+			confirm_asn "$whoisdomain" "$list_asn"
 
 			# Perform WHOIS Query of ASN for Associated Prefixes:
 
-			list_ipblock_4=$(
-				echo "$asnlist" | while IFS= read -r asn
-				do
-					whois -h "$whoisdomain" -i origin "$asn" | egrep '^route\:' | awk '{print $2}'
-				done
-			)
+			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
+			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
-			list_ipblock_6=$(
-				echo "$asnlist" | while IFS= read -r asn
-				do
-					whois -h "$whoisdomain" -i origin "$asn" | egrep '^route6\:' | awk '{print $2}'
-				done
-			)
+			#list_ipblock_4=$(
+			#	echo "$list_asn" | while IFS= read -r asn
+			#	do
+			#		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route\:' | awk '{print $2}'
+			#	done
+			#)
+			#
+			#list_ipblock_6=$(
+			#	echo "$list_asn" | while IFS= read -r asn
+			#	do
+			#		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route6\:' | awk '{print $2}'
+			#	done
+			#)
 
-			# Add Rules to Drop ASN Prefixes:
+			# Add Rules to Reject ASN Prefixes:
 
-			[ $(printf "$list_ipblock_4" | wc -l) -ne 0 ] &&
+			[ $(printf "$list_prefixes_ipv4" | wc -l) -ne 0 ] &&
 			{
-				echo "$list_ipblock_4" | while IFS= read -r subnet
+				echo "$list_prefixes_ipv4" | while IFS= read -r prefix
 				do
-					printf "add rule inet $name_program $name_program ip daddr $subnet reject\n" >> "$fpath_ruleset.tmp"
+					printf "add rule inet $name_program $name_program ip daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
 			}
 
-			[ $(printf "$list_ipblock_6" | wc -l) -ne 0 ] &&
+			[ $(printf "$list_prefixes_ipv6" | wc -l) -ne 0 ] &&
 			{
-				echo "$list_ipblock_6" | while IFS= read -r subnet
+				echo "$list_prefixes_ipv6" | while IFS= read -r prefix
 				do
-					printf "add rule inet $name_program $name_program ip6 daddr $subnet reject\n" >> "$fpath_ruleset.tmp"
+					printf "add rule inet $name_program $name_program ip6 daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
 			}
 
@@ -131,10 +164,11 @@ main()
 			systemctl -q daemon-reload
 			systemctl -q reenable "$fname_service"
 
-			# Load Firewall Ruleset:
+			# Load Ruleset:
 
 			mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
 			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
+
 			nft -f "$fpath_ruleset"
 		fi
 
@@ -143,6 +177,12 @@ main()
 
 	[ "$*" = "resume" ] &&
 	{
+		if [ "$(uname -s)" = "OpenBSD" ]
+		then
+			# COMMAND TO RESTORE SERVICE
+			pfctl -a "$name_program" -f "$fpath_ruleset"
+		fi
+
 		if [ "$(uname -s)" = "Linux" ]
 		then
 			systemctl -q enable "$fname_service"
@@ -154,6 +194,12 @@ main()
 
 	[ "$*" = "stop" ] &&
 	{
+		if [ "$(uname -s)" = "OpenBSD" ]
+		then
+			# COMMAND TO REMOVE SERVICE
+			pfctl -a "$name_program" -F rules 1> /dev/null
+		fi
+
 		if [ "$(uname -s)" = "Linux" ]
 		then
 			systemctl -q disable "$fname_service"
@@ -166,6 +212,19 @@ main()
 
 confirm_asn()
 {
+	local whoisdomain="$1"
+	local list_asn="$2"
+
+	echo "$list_asn" | while IFS= read -r asn
+	do
+		whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route\:' || {
+			>&2 printf "> warn: ASN \"%s\" did not return IPv4 results.\n" "$asn"
+		}
+
+		whois -h "$whoisdomain" -i origin "$asn" | egrep -q '^route6\:' || {
+			>&2 printf "> warn: ASN \"%s\" did not return IPv6 results.\n" "$asn"
+		}
+	done
 }
 
 confirm_network_connection()
@@ -186,7 +245,7 @@ confirm_network_connection()
 	fi
 }
 
-confirm_requirements()
+confirm_prerequisites()
 {
 	[ -f "$1" ] || {
 		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
@@ -236,6 +295,28 @@ confirm_root_access()
 		>&2 printf "> error: $(basename "$0") not running as root.\n"
 		return 2
 	fi
+}
+
+print_prefixes_ipv4()
+{
+	local whoisdomain="$1"
+	local list_asn="$2"
+
+	echo "$list_asn" | while IFS= read -r asn
+	do
+		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route\:' | awk '{print $2}'
+	done
+}
+
+print_prefixes_ipv6()
+{
+	local whoisdomain="$1"
+	local list_asn="$2"
+
+	echo "$list_asn" | while IFS= read -r asn
+	do
+		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route6\:' | awk '{print $2}'
+	done
 }
 
 print_help()
