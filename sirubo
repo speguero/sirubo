@@ -128,20 +128,6 @@ main()
 			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
 			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
-			#list_ipblock_4=$(
-			#	echo "$list_asn" | while IFS= read -r asn
-			#	do
-			#		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route\:' | awk '{print $2}'
-			#	done
-			#)
-			#
-			#list_ipblock_6=$(
-			#	echo "$list_asn" | while IFS= read -r asn
-			#	do
-			#		whois -h "$whoisdomain" -i origin "$asn" | egrep '^route6\:' | awk '{print $2}'
-			#	done
-			#)
-
 			# Add Rules to Reject ASN Prefixes:
 
 			[ $(printf "$list_prefixes_ipv4" | wc -l) -ne 0 ] &&
