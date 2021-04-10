@@ -260,29 +260,35 @@ confirm_prerequisites()
 		return 2
 	}
 
-	uname -s | grep -q 'OpenBSD' && which pfctl 2>&1 > /dev/null || {
-		>&2 printf "> error: \"pfctl\" is a prerequisite and was not found.\n"
-		return 2
+	uname -s | grep -q "OpenBSD" && {
+
+		which pfctl 2>&1 > /dev/null || {
+			>&2 printf "> error: \"pfctl\" is a prerequisite and was not found.\n"
+			return 2
+		}
+
+		which whois 2>&1 > /dev/null || {
+			>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
+			return 2
+		}
 	}
 
-	uname -s | grep -q 'OpenBSD' && which whois 2>&1 > /dev/null || {
-		>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
-		return 2
-	}
+	uname -s | grep -q "Linux" && {
 
-	uname -s | grep -q 'Linux' && which nft 2>&1 > /dev/null || {
-		>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
-		return 2
-	}
+		which nft 2>&1 > /dev/null || {
+			>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
+			return 2
+		}
 
-	uname -s | grep -q 'Linux' && which systemd 2>&1 > /dev/null || {
-		>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
-		return 2
-	}
+		which systemd 2>&1 > /dev/null || {
+			>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
+			return 2
+		}
 
-	uname -s | grep -q 'Linux' && which whois 2>&1 > /dev/null || {
-		>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
-		return 2
+		which whois 2>&1 > /dev/null || {
+			>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
+			return 2
+		}
 	}
 
 	return 0
