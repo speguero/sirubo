@@ -97,8 +97,6 @@ nc: connect to example.com (0.0.0.0) port 443 (tcp) failed: Connection refused
 </pre>
 
 <p>This will indicate that your firewall is configured to reject outbound traffic to <code>example.com</code>.</p>
-
-<p>Bon appétit, baby.</p>
 </ol>
 
 <br>
