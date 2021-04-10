@@ -96,9 +96,11 @@ main()
 
 			# Load Ruleset:
 
-			mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
-			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
+			[ -f "$fpath_ruleset" ] && {
+				mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
+			}
 
+			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
 		fi
 
@@ -166,9 +168,11 @@ main()
 
 			# Load Ruleset:
 
-			mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
-			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
+			[ -f "$fpath_ruleset" ] && {
+				mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
+			}
 
+			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			nft -f "$fpath_ruleset"
 		fi
 
