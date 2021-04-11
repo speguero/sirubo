@@ -66,15 +66,10 @@ main()
 			test -f "$fpath_ruleset.tmp" && rm -f "$fpath_ruleset.tmp"
 			touch "$fpath_ruleset.tmp"
 
-			# Wait for Network Connection if Not Present:
-			
+			# Perform WHOIS Query of ASN(s) for Prefixes:
+
 			confirm_network_connection "$whoisdomain"
-
-			# Verify Existence of Specified ASNs:
-
 			confirm_asn "$whoisdomain" "$list_asn"
-
-			# Perform WHOIS Query of ASN for Associated Prefixes:
 
 			local list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
 			local list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
@@ -128,18 +123,13 @@ main()
 			printf "flush table inet $name_program\n"                                                                     >> "$fpath_ruleset.tmp"
 			printf "add chain inet $name_program $name_program { type filter hook output priority 0 ; policy accept; }\n" >> "$fpath_ruleset.tmp"
 
-			# Wait for Network Connection if Not Present:
-			
+			# Perform WHOIS Query of ASN(s) for Prefixes:
+
 			confirm_network_connection "$whoisdomain"
-
-			# Verify Existence of Specified ASNs:
-
 			confirm_asn "$whoisdomain" "$list_asn"
 
-			# Perform WHOIS Query of ASN for Associated Prefixes:
-
-			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
-			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
+			local list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
+			local list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
 			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
 			then
