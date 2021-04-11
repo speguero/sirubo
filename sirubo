@@ -358,8 +358,8 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStartPre=sirubo create
-ExecStart=/usr/sbin/nft -f "$fpath_ruleset"
+ExecStartPre=/usr/sbin/nft -f "$fpath_ruleset"
+ExecStart=/usr/local/bin/sirubo create
 
 [Install]
 WantedBy=multi-user.target
