@@ -8,7 +8,8 @@ main()
 	set -e
 	umask u=rw,go=
 
-	local list_asn=""
+	local bool_nowrite_ruleset=
+	local list_asn=
 	local name_program="sirubo"
 	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
@@ -16,6 +17,7 @@ main()
 	if [ "$(uname -s)" = "OpenBSD" ]
 	then
 		local fpath_ruleset="/usr/local/etc/pf.$name_program.conf"
+		local fname_service=
 	fi
 
 	if [ "$(uname -s)" = "Linux" ]
@@ -26,23 +28,23 @@ main()
 
 	# = ARGS =>
 
-	[ "$*" = "" ] &&
-	{
+	if [ "$*" = "" ]
+	then
 		print_help
 		exit 1
-	}
+	fi
 
-	[ "$*" = "help" ] &&
-	{
+	if [ "$*" = "help" ]
+	then
 		print_help
 		exit 1
-	}
+	fi
 	
 	confirm_root_access                 || exit $?
 	confirm_prerequisites "$fpath_conf" || exit $?
 
-	[ "$*" = "create" ] &&
-	{
+	if [ "$*" = "create" ]
+	then
 		# Import Program Configuration File:
 
 		list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
@@ -53,7 +55,7 @@ main()
 		then
 			# Create Anchor in pf.conf:
 
-			cat /etc/pf.conf | egrep -q "^anchor $name_program$" || {
+			cat "/etc/pf.conf" | egrep -q "^anchor $name_program$" || {
 				printf "anchor $name_program" >> "/etc/pf.conf"
 			}
 
@@ -75,30 +77,41 @@ main()
 			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
 			# Add Rules to Reject ASN Prefixes:
-
-			[ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ] &&
-			{
-				echo "$list_prefixes_ipv4" | while IFS= read -r prefix
+			
+			if [ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			then
+				printf "$list_prefixes_ipv4" | while IFS= read -r prefix
 				do
 					printf "block return on any inet from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
-			}
+			else
+				local bool_nowrite_ruleset=1
+			fi
 
-			[ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ] &&
-			{
-				echo "$list_prefixes_ipv6" | while IFS= read -r prefix
+			if [ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			then
+				printf "$list_prefixes_ipv6" | while IFS= read -r prefix
 				do
 					printf "block return on any inet6 from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
-			}
+			else
+				local bool_nowrite_ruleset=1
+			fi
+
+			if [ "$bool_nowrite_ruleset" = 1 ]
+			then
+				>&2 printf "> error: ASN queries did not return any prefix results.\n"
+				exit 2
+			fi
 
 			# Create Service for Ruleset Persistency:
 
 			# Load Ruleset:
 
-			[ -f "$fpath_ruleset" ] && {
+			if [ -f "$fpath_ruleset" ]
+			then
 				mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
-			}
+			fi
 
 			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
@@ -130,21 +143,31 @@ main()
 
 			# Add Rules to Reject ASN Prefixes:
 
-			[ $(printf "$list_prefixes_ipv4" | wc -l) -ne 0 ] &&
-			{
-				echo "$list_prefixes_ipv4" | while IFS= read -r prefix
+			if [ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			then
+				printf "$list_prefixes_ipv4" | while IFS= read -r prefix
 				do
 					printf "add rule inet $name_program $name_program ip daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
-			}
+			else
+				local bool_nowrite_ruleset=1
+			fi
 
-			[ $(printf "$list_prefixes_ipv6" | wc -l) -ne 0 ] &&
-			{
-				echo "$list_prefixes_ipv6" | while IFS= read -r prefix
+			if [ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			then
+				printf "$list_prefixes_ipv6" | while IFS= read -r prefix
 				do
 					printf "add rule inet $name_program $name_program ip6 daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
-			}
+			else
+				local bool_nowrite_ruleset=1
+			fi
+
+			if [ "$bool_nowrite_ruleset" = 1 ]
+			then
+				>&2 printf "> error: ASN queries did not return any prefix results.\n"
+				exit 2
+			fi
 
 			# Create Service for Ruleset Persistency:
 
@@ -154,19 +177,20 @@ main()
 
 			# Load Ruleset:
 
-			[ -f "$fpath_ruleset" ] && {
+			if [ -f "$fpath_ruleset" ]
+			then
 				mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
-			}
+			fi
 
 			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			nft -f "$fpath_ruleset"
 		fi
 
 		exit
-	}
+	fi
 
-	[ "$*" = "resume" ] &&
-	{
+	if [ "$*" = "resume" ]
+	then
 		if [ "$(uname -s)" = "OpenBSD" ]
 		then
 			# COMMAND TO RESTORE SERVICE
@@ -180,10 +204,10 @@ main()
 		fi
 
 		exit
-	}
+	fi
 
-	[ "$*" = "stop" ] &&
-	{
+	if [ "$*" = "stop" ]
+	then
 		if [ "$(uname -s)" = "OpenBSD" ]
 		then
 			# COMMAND TO REMOVE SERVICE
@@ -197,7 +221,7 @@ main()
 		fi
 
 		exit
-	}
+	fi
 }
 
 confirm_asn()
@@ -207,29 +231,31 @@ confirm_asn()
 
 	echo "$list_asn" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route\:' || {
-			>&2 printf "> warn: ASN \"%s\" did not return IPv4 results.\n" "$asn"
-		}
+		if ! whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route\:'
+		then
+			>&2 printf "> warn: ASN \"%s\" did not return IPv4 prefix results.\n" "$asn"
+		fi
 
-		whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route6\:' || {
-			>&2 printf "> warn: ASN \"%s\" did not return IPv6 results.\n" "$asn"
-		}
+		if ! whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route6\:'
+		then
+			>&2 printf "> warn: ASN \"%s\" did not return IPv6 prefix results.\n" "$asn"
+		fi
 	done
 }
 
 confirm_network_connection()
 {
-	local ping_loop=0
+	local bool_pingloop=0
 	local whoisdomain="$1"
 
 	until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
 	do
-		ping_loop=1
+		bool_pingloop=1
 		printf "  info: Cannot ping \"%s\". Will not proceed until I can...\r" "$whoisdomain"
 		sleep 1
 	done
 
-	if [ $ping_loop = 1 ]
+	if [ "$bool_pingloop" = 1 ]
 	then
 		printf "\n"
 	fi
@@ -237,56 +263,63 @@ confirm_network_connection()
 
 confirm_prerequisites()
 {
-	[ -f "$1" ] || {
+	if ! [ -f "$1" ]
+	then
 		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
 		touch "$1" && \
 			chown 0:0 "$1" && \
 			chmod 600 "$1"
 		return 1
-	}
+	fi
 
-	cat "$1" | egrep -qo "^AS[^ ]+" || {
+	if ! cat "$1" | egrep -qo "^AS[^ ]+"
+	then
 		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
 		return 2
-	}
+	fi
 
-	uname -s | grep -q "OpenBSD" && {
-
-		which pfctl 2>&1 > /dev/null || {
+	if [ "$(uname -s)" == "OpenBSD" ]
+	then
+		if ! which pfctl > /dev/null 2>&1
+		then
 			>&2 printf "> error: \"pfctl\" is a prerequisite and was not found.\n"
 			return 2
-		}
+		fi
 
-		which whois 2>&1 > /dev/null || {
+		if ! which whois > /dev/null 2>&1
+		then
 			>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
 			return 2
-		}
-	}
+		fi
+	fi
 
-	uname -s | grep -q "Linux" && {
-
-		which nft 2>&1 > /dev/null || {
+	if [ "$(uname -s)" == "Linux" ]
+	then
+		if ! which nft > /dev/null 2>&1
+		then
 			>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
 			return 2
-		}
+		fi
 
-		which systemd 2>&1 > /dev/null || {
+		if ! which systemd > /dev/null 2>&1
+		then
 			>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
 			return 2
-		}
+		fi
 
-		which whois 2>&1 > /dev/null || {
+		if ! which whois > /dev/null 2>&1
+		then
 			>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
 			return 2
-		}
-	}
+		fi
+	fi
 
 	return 0
 }
 
 confirm_root_access()
 {
-	if [ `id -u` -ne 0 ]
+	if [ "$(id -u)" -ne 0 ]
 	then
 		>&2 printf "> error: $(basename "$0") not running as root.\n"
 		return 2
@@ -298,7 +331,7 @@ print_prefixes_ipv4()
 	local whoisdomain="$1"
 	local list_asn="$2"
 
-	echo "$list_asn" | while IFS= read -r asn
+	printf "$list_asn" | while IFS= read -r asn
 	do
 		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route:/ {print $2}'
 	done
@@ -309,7 +342,7 @@ print_prefixes_ipv6()
 	local whoisdomain="$1"
 	local list_asn="$2"
 
-	echo "$list_asn" | while IFS= read -r asn
+	printf "$list_asn" | while IFS= read -r asn
 	do
 		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route6:/ {print $2}'
 	done
