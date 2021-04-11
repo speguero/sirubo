@@ -80,7 +80,7 @@ main()
 			
 			if [ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ]
 			then
-				printf "$list_prefixes_ipv4" | while IFS= read -r prefix
+				printf "$list_prefixes_ipv4\n" | while IFS= read -r prefix
 				do
 					printf "block return on any inet from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
@@ -90,7 +90,7 @@ main()
 
 			if [ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ]
 			then
-				printf "$list_prefixes_ipv6" | while IFS= read -r prefix
+				printf "$list_prefixes_ipv6\n" | while IFS= read -r prefix
 				do
 					printf "block return on any inet6 from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
@@ -145,7 +145,7 @@ main()
 
 			if [ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ]
 			then
-				printf "$list_prefixes_ipv4" | while IFS= read -r prefix
+				printf "$list_prefixes_ipv4\n" | while IFS= read -r prefix
 				do
 					printf "add rule inet $name_program $name_program ip daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
@@ -155,7 +155,7 @@ main()
 
 			if [ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ]
 			then
-				printf "$list_prefixes_ipv6" | while IFS= read -r prefix
+				printf "$list_prefixes_ipv6\n" | while IFS= read -r prefix
 				do
 					printf "add rule inet $name_program $name_program ip6 daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
@@ -229,7 +229,7 @@ confirm_asn()
 	local whoisdomain="$1"
 	local list_asn="$2"
 
-	echo "$list_asn" | while IFS= read -r asn
+	printf "$list_asn\n" | while IFS= read -r asn
 	do
 		if ! whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route\:'
 		then
@@ -331,7 +331,7 @@ print_prefixes_ipv4()
 	local whoisdomain="$1"
 	local list_asn="$2"
 
-	printf "$list_asn" | while IFS= read -r asn
+	printf "$list_asn\n" | while IFS= read -r asn
 	do
 		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route:/ {print $2}'
 	done
@@ -342,7 +342,7 @@ print_prefixes_ipv6()
 	local whoisdomain="$1"
 	local list_asn="$2"
 
-	printf "$list_asn" | while IFS= read -r asn
+	printf "$list_asn\n" | while IFS= read -r asn
 	do
 		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route6:/ {print $2}'
 	done
