@@ -112,6 +112,7 @@ main()
 
 			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
+			pfctl -a "$name_program" -F states
 		fi
 
 		if [ "$(uname -s)" = "Linux" ]
@@ -184,6 +185,7 @@ main()
 		then
 			rcctl enable "$name_program"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
+			pfctl -a "$name_program" -F states
 		fi
 
 		if [ "$(uname -s)" = "Linux" ]
