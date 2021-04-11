@@ -234,7 +234,7 @@ confirm_network_connection()
 	local bool_pingloop=0
 	local whoisdomain="$1"
 
-	until ping -q -c 1 "$whoisdomain" > /dev/null 2>&1
+	until ping -q -c 3 "$whoisdomain" > /dev/null 2>&1
 	do
 		bool_pingloop=1
 		printf "  info: Cannot ping \"%s\". Will not proceed until I can...\r" "$whoisdomain"
