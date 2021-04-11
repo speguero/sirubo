@@ -18,7 +18,6 @@ main()
 	if [ "$(uname -s)" = "OpenBSD" ]
 	then
 		local fpath_ruleset="/usr/local/etc/pf.$name_program.conf"
-		local fname_service=
 	fi
 
 	if [ "$(uname -s)" = "Linux" ]
@@ -100,6 +99,10 @@ main()
 
 			# Create Service for Ruleset Persistency:
 
+			print_openbsd_service_file "$name_program" "$fpath_ruleset" > "/etc/rc.d/$name_program"
+			chmod ugo=rx "/etc/rc.d/$name_program"
+			rcctl enable "$name_program"
+
 			# Load Ruleset:
 
 			if [ -f "$fpath_ruleset" ]
@@ -157,7 +160,7 @@ main()
 
 			# Create Service for Ruleset Persistency:
 
-			print_linux_systemd_unit_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service"
+			print_linux_systemd_service_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service"
 			systemctl -q daemon-reload
 			systemctl -q reenable "$fname_service"
 
@@ -179,7 +182,7 @@ main()
 	then
 		if [ "$(uname -s)" = "OpenBSD" ]
 		then
-			# COMMAND TO RESTORE SERVICE
+			rcctl enable "$name_program"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
 		fi
 
@@ -196,7 +199,7 @@ main()
 	then
 		if [ "$(uname -s)" = "OpenBSD" ]
 		then
-			# COMMAND TO REMOVE SERVICE
+			rcctl disable "$name_program"
 			pfctl -a "$name_program" -F rules 2> /dev/null
 		fi
 
@@ -346,7 +349,7 @@ Usage: $(basename "$0") [command]
 EOF
 }
 
-print_linux_systemd_unit_file()
+print_linux_systemd_service_file()
 {
 	local name_program="$1"
 	local fpath_ruleset="$2"
@@ -363,6 +366,30 @@ ExecStart=/usr/local/bin/sirubo create
 
 [Install]
 WantedBy=multi-user.target
+EOF
+}
+
+print_openbsd_service_file()
+{
+	local name_program="$1"
+	local fpath_ruleset="$2"
+
+	cat <<EOF
+#!/bin/ksh
+
+daemon="$(dirname "$(readlink -f "$0")")/$name_program"
+
+. /etc/rc.d/rc.subr
+
+rc_pre() {
+		\${rcexec} "(pfctl -a "$name_program" -f "$fpath_ruleset" &)"
+}
+
+rc_start() {
+        \${rcexec} "(\${daemon} create &)"
+}
+
+rc_cmd \$1
 EOF
 }
 
