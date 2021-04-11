@@ -207,7 +207,7 @@ main()
 		if [ "$(uname -s)" = "OpenBSD" ]
 		then
 			# COMMAND TO REMOVE SERVICE
-			pfctl -a "$name_program" -F rules 1> /dev/null
+			pfctl -a "$name_program" -F rules 2> /dev/null
 		fi
 
 		if [ "$(uname -s)" = "Linux" ]
