@@ -56,12 +56,14 @@ main()
 		then
 			# Create Anchor in pf.conf:
 
-			cat "/etc/pf.conf" | egrep -q "^anchor $name_program$" || {
+			if ! cat "/etc/pf.conf" | egrep -q "^anchor $name_program$"
+			then
 				printf "anchor $name_program" >> "/etc/pf.conf"
-			}
+			fi
 
 			# Create Ruleset:
 
+			test -f "$fpath_ruleset.tmp" && rm -f "$fpath_ruleset.tmp"
 			touch "$fpath_ruleset.tmp"
 
 			# Wait for Network Connection if Not Present:
@@ -118,6 +120,7 @@ main()
 		then
 			# Create Ruleset:
 
+			test -f "$fpath_ruleset.tmp" && rm -f "$fpath_ruleset.tmp"
 			touch "$fpath_ruleset.tmp"
 
 			printf "#!/usr/sbin/nft -f\n\n"                                                                               >> "$fpath_ruleset.tmp"
