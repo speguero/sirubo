@@ -384,11 +384,11 @@ daemon="$(dirname "$(readlink -f "$0")")/$name_program"
 . /etc/rc.d/rc.subr
 
 rc_pre() {
-		\${rcexec} "(pfctl -a "$name_program" -f "$fpath_ruleset" &)"
+	\${rcexec} "(pfctl -a "$name_program" -f "$fpath_ruleset" &)"
 }
 
 rc_start() {
-        \${rcexec} "(\${daemon} create &)"
+	\${rcexec} "(\${daemon} create &)"
 }
 
 rc_cmd \$1
