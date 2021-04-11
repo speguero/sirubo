@@ -8,7 +8,6 @@ main()
 	set -e
 	umask u=rw,go=
 
-	local bool_nowrite_ruleset=
 	local list_asn=
 	local list_prefixes_ipv4=
 	local list_prefixes_ipv6=
@@ -78,6 +77,12 @@ main()
 			local list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
 			local list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
+			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
+			then
+				>&2 printf "> error: ASN queries did not return any prefix results.\n"
+				exit 2
+			fi
+
 			# Add Rules to Reject ASN Prefixes:
 			
 			if ! [ -z "$list_prefixes_ipv4" ]
@@ -86,8 +91,6 @@ main()
 				do
 					printf "block return on any inet from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
-			else
-				local bool_nowrite_ruleset=1
 			fi
 
 			if ! [ -z "$list_prefixes_ipv6" ]
@@ -96,14 +99,6 @@ main()
 				do
 					printf "block return on any inet6 from any to $prefix\n" >> "$fpath_ruleset.tmp"
 				done
-			else
-				local bool_nowrite_ruleset=1
-			fi
-
-			if [ "$bool_nowrite_ruleset" = 1 ]
-			then
-				>&2 printf "> error: ASN queries did not return any prefix results.\n"
-				exit 2
 			fi
 
 			# Create Service for Ruleset Persistency:
@@ -143,6 +138,12 @@ main()
 			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
 			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
+			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
+			then
+				>&2 printf "> error: ASN queries did not return any prefix results.\n"
+				exit 2
+			fi
+
 			# Add Rules to Reject ASN Prefixes:
 
 			if ! [ -z "$list_prefixes_ipv4" ]
@@ -151,8 +152,6 @@ main()
 				do
 					printf "add rule inet $name_program $name_program ip daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
-			else
-				local bool_nowrite_ruleset=1
 			fi
 
 			if ! [ -z "$list_prefixes_ipv6" ]
@@ -161,14 +160,6 @@ main()
 				do
 					printf "add rule inet $name_program $name_program ip6 daddr $prefix reject\n" >> "$fpath_ruleset.tmp"
 				done
-			else
-				local bool_nowrite_ruleset=1
-			fi
-
-			if [ "$bool_nowrite_ruleset" = 1 ]
-			then
-				>&2 printf "> error: ASN queries did not return any prefix results.\n"
-				exit 2
 			fi
 
 			# Create Service for Ruleset Persistency:
