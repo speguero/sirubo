@@ -10,6 +10,8 @@ main()
 
 	local bool_nowrite_ruleset=
 	local list_asn=
+	local list_prefixes_ipv4=
+	local list_prefixes_ipv6=
 	local name_program="sirubo"
 	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
@@ -47,7 +49,7 @@ main()
 	then
 		# Import Program Configuration File:
 
-		list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
+		local list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
 
 		# Create Firewall Ruleset Configuration File:
 
@@ -73,12 +75,12 @@ main()
 
 			# Perform WHOIS Query of ASN for Associated Prefixes:
 
-			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
-			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
+			local list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
+			local list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
 			# Add Rules to Reject ASN Prefixes:
 			
-			if [ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			if ! [ -z "$list_prefixes_ipv4" ]
 			then
 				printf "$list_prefixes_ipv4\n" | while IFS= read -r prefix
 				do
@@ -88,7 +90,7 @@ main()
 				local bool_nowrite_ruleset=1
 			fi
 
-			if [ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			if ! [ -z "$list_prefixes_ipv6" ]
 			then
 				printf "$list_prefixes_ipv6\n" | while IFS= read -r prefix
 				do
@@ -143,7 +145,7 @@ main()
 
 			# Add Rules to Reject ASN Prefixes:
 
-			if [ $(printf "$list_prefixes_ipv4" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			if ! [ -z "$list_prefixes_ipv4" ]
 			then
 				printf "$list_prefixes_ipv4\n" | while IFS= read -r prefix
 				do
@@ -153,7 +155,7 @@ main()
 				local bool_nowrite_ruleset=1
 			fi
 
-			if [ $(printf "$list_prefixes_ipv6" | wc -l | tr -d "[:blank:]") -ne 0 ]
+			if ! [ -z "$list_prefixes_ipv6" ]
 			then
 				printf "$list_prefixes_ipv6\n" | while IFS= read -r prefix
 				do
