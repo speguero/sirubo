@@ -12,16 +12,17 @@ main()
 	local list_prefixes_ipv4=
 	local list_prefixes_ipv6=
 	local name_program="sirubo"
-	local fpath_conf="/usr/local/etc/$name_program.conf"
 	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
 
 	if [ "$(uname -s)" = "OpenBSD" ]
 	then
-		local fpath_ruleset="/usr/local/etc/pf.$name_program.conf"
+		local fpath_conf="/etc/$name_program.conf"
+		local fpath_ruleset="/etc/pf.$name_program.conf"
 	fi
 
 	if [ "$(uname -s)" = "Linux" ]
 	then
+		local fpath_conf="/usr/local/etc/$name_program.conf"
 		local fpath_ruleset="/usr/local/etc/$name_program.ruleset"
 		local fname_service="$name_program.service"
 	fi
