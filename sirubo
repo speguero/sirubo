@@ -269,7 +269,7 @@ confirm_prerequisites()
 		return 2
 	fi
 
-	if [ "$(uname -s)" == "OpenBSD" ]
+	if [ "$(uname -s)" = "OpenBSD" ]
 	then
 		if ! which pfctl > /dev/null 2>&1
 		then
@@ -284,7 +284,7 @@ confirm_prerequisites()
 		fi
 	fi
 
-	if [ "$(uname -s)" == "Linux" ]
+	if [ "$(uname -s)" = "Linux" ]
 	then
 		if ! which nft > /dev/null 2>&1
 		then
