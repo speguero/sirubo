@@ -112,7 +112,6 @@ main()
 
 			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
-			pfctl -a "$name_program" -F states
 		fi
 
 		if [ "$(uname -s)" = "Linux" ]
@@ -185,7 +184,6 @@ main()
 		then
 			rcctl enable "$name_program"
 			pfctl -a "$name_program" -f "$fpath_ruleset"
-			pfctl -a "$name_program" -F states
 		fi
 
 		if [ "$(uname -s)" = "Linux" ]
@@ -310,7 +308,7 @@ confirm_prerequisites()
 
 confirm_root_access()
 {
-	if [ "$(id -u)" -ne 0 ]
+	if [ "$(id -u)" != 0 ]
 	then
 		>&2 printf "> error: $(basename "$0") not running as root.\n"
 		return 2
