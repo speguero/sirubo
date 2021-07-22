@@ -285,15 +285,16 @@ confirm_prerequisites()
 
 	if [ "$(uname -s)" = "Linux" ]
 	then
-		if ! which nft > /dev/null 2>&1
+
+		if ! [ -d "/run/systemd/system" ]
 		then
-			>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
+			>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
 			return 2
 		fi
 
-		if ! which systemd > /dev/null 2>&1
+		if ! which nft > /dev/null 2>&1
 		then
-			>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
+			>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
 			return 2
 		fi
 
