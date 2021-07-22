@@ -221,12 +221,12 @@ confirm_asn()
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
-		if ! whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route\:'
+		if ! whois -h "$whoisdomain" -- -i origin "$asn" | egrep -q '^route\:'
 		then
 			>&2 printf "> warn: ASN \"%s\" did not return IPv4 prefix results.\n" "$asn"
 		fi
 
-		if ! whois -h "$whoisdomain" -- "-i origin "$asn"" | egrep -q '^route6\:'
+		if ! whois -h "$whoisdomain" -- -i origin "$asn" | egrep -q '^route6\:'
 		then
 			>&2 printf "> warn: ASN \"%s\" did not return IPv6 prefix results.\n" "$asn"
 		fi
