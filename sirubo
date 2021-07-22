@@ -324,7 +324,7 @@ print_prefixes_ipv4()
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route:/ {print $2}'
+		whois -h "$whoisdomain" -- -i origin "$asn" | awk '/route:/ {print $2}'
 	done
 }
 
@@ -335,7 +335,7 @@ print_prefixes_ipv6()
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -- "-i origin "$asn"" | awk '/route6:/ {print $2}'
+		whois -h "$whoisdomain" -- -i origin "$asn" | awk '/route6:/ {print $2}'
 	done
 }
 
