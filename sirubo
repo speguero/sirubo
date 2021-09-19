@@ -8,23 +8,23 @@ main()
 	set -e
 	umask u=rw,go=
 
-	local list_asn=
-	local list_prefixes_ipv4=
-	local list_prefixes_ipv6=
-	local name_program="sirubo"
-	local whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
+	list_asn=
+	list_prefixes_ipv4=
+	list_prefixes_ipv6=
+	name_program="sirubo"
+	whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
 
 	if [ "$(uname -s)" = "OpenBSD" ]
 	then
-		local fpath_conf="/etc/$name_program.conf"
-		local fpath_ruleset="/etc/pf.$name_program.conf"
+		fpath_conf="/etc/$name_program.conf"
+		fpath_ruleset="/etc/pf.$name_program.conf"
 	fi
 
 	if [ "$(uname -s)" = "Linux" ]
 	then
-		local fpath_conf="/usr/local/etc/$name_program.conf"
-		local fpath_ruleset="/usr/local/etc/$name_program.ruleset"
-		local fname_service="$name_program.service"
+		fpath_conf="/usr/local/etc/$name_program.conf"
+		fpath_ruleset="/usr/local/etc/$name_program.ruleset"
+		fname_service="$name_program.service"
 	fi
 
 	# = ARGS =>
@@ -48,7 +48,7 @@ main()
 	then
 		# Import Program Configuration File:
 
-		local list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
+		list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
 
 		# Create Firewall Ruleset Configuration File:
 
@@ -71,8 +71,8 @@ main()
 			confirm_network_connection "$whoisdomain"
 			confirm_asn "$whoisdomain" "$list_asn"
 
-			local list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
-			local list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
+			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
+			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
 			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
 			then
@@ -132,8 +132,8 @@ main()
 			confirm_network_connection "$whoisdomain"
 			confirm_asn "$whoisdomain" "$list_asn"
 
-			local list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
-			local list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
+			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
+			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
 
 			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
 			then
@@ -216,8 +216,8 @@ main()
 
 confirm_asn()
 {
-	local whoisdomain="$1"
-	local list_asn="$2"
+	whoisdomain="$1"
+	list_asn="$2"
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
@@ -235,7 +235,7 @@ confirm_asn()
 
 confirm_network_connection()
 {
-	local whoisdomain="$1"
+	whoisdomain="$1"
 
 	if nc -w 1 "$whoisdomain" 43
 	then
@@ -314,8 +314,8 @@ confirm_root_access()
 
 print_prefixes_ipv4()
 {
-	local whoisdomain="$1"
-	local list_asn="$2"
+	whoisdomain="$1"
+	list_asn="$2"
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
@@ -325,8 +325,8 @@ print_prefixes_ipv4()
 
 print_prefixes_ipv6()
 {
-	local whoisdomain="$1"
-	local list_asn="$2"
+	whoisdomain="$1"
+	list_asn="$2"
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
@@ -348,8 +348,8 @@ EOF
 
 print_linux_systemd_service_file()
 {
-	local name_program="$1"
-	local fpath_ruleset="$2"
+	name_program="$1"
+	fpath_ruleset="$2"
 
 	cat <<EOF
 [Unit]
@@ -368,8 +368,8 @@ EOF
 
 print_openbsd_service_file()
 {
-	local name_program="$1"
-	local fpath_ruleset="$2"
+	name_program="$1"
+	fpath_ruleset="$2"
 
 	cat <<EOF
 #!/bin/ksh
