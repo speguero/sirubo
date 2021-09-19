@@ -1,34 +1,30 @@
 <h1>sirubo</h1>
-<p style="line-height: 165%;">ASN IP (big tech conglomerate) outbound traffic blocker.</p>
-<a href="https://peguero.xyz/project/sirubo">https://peguero.xyz/project/sirubo</a>
+<p style="line-height: 165%;">ASN prefix (big tech conglomerate) outbound traffic blocker.</p>
+<a href="https://peguero.xyz/software/sirubo">https://peguero.xyz/software/sirubo</a>
 
 <br>
 <h3>Usage</h3>
 
-<code>sirubo [command]</code>
+<code>sirubo [argument]</code>
 <br>
 
 <ol>
 <table style="width: 100%;">
 <tr>
-	<td><code>[none]</code></td>
-	<td>Display help.</td>
-</tr>
-<tr>
-	<td><code>help</code></td>
-	<td>Display help.</td>
-</tr>
-<tr>
 	<td><code>create</code></td>
-	<td>Generate firewall reject rules.</td>
+	<td>Generate new firewall ruleset.</td>
 </tr>
 <tr>
-	<td><code>stop</code></td>
-	<td>Undo firewall reject rules.</td>
+	<td><code>list</code></td>
+	<td>Display existing firewall ruleset.</td>
 </tr>
 <tr>
 	<td><code>resume</code></td>
-	<td>Resume enforcement of cached firewall reject rules.</td>
+	<td>Resume enforcement of existing firewall ruleset.</td>
+</tr>
+<tr>
+	<td><code>stop</code></td>
+	<td>Delete existing firewall ruleset and login service.</td>
 </tr>
 </table>
 </ol>
