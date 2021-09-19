@@ -365,20 +365,6 @@ print_prefixes_ipv6()
 	done
 }
 
-usage()
-{
-	cat <<EOF
-usage: $(basename "$0") [argument]
-
-  create    Generate new firewall ruleset.
-  list      Display existing firewall ruleset.
-  resume    Resume enforcement of existing firewall ruleset.
-  stop      Delete existing firewall ruleset and login service.
-EOF
-
-	exit 1
-}
-
 print_linux_systemd_service_file()
 {
 	name_program="$1"
@@ -421,6 +407,20 @@ rc_start() {
 
 rc_cmd \$1
 EOF
+}
+
+usage()
+{
+	cat <<EOF
+usage: $(basename "$0") [argument]
+
+  create    Generate new firewall ruleset.
+  list      Display existing firewall ruleset.
+  resume    Resume enforcement of existing firewall ruleset.
+  stop      Delete existing firewall ruleset and login service.
+EOF
+
+	exit 1
 }
 
 wait_net_conn()
