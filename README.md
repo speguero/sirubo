@@ -1,6 +1,5 @@
 <h1>sirubo</h1>
 <p style="line-height: 165%;">ASN prefix (big tech conglomerate) outbound traffic blocker.</p>
-<a href="https://peguero.xyz/software/sirubo">https://peguero.xyz/software/sirubo</a>
 
 <br>
 <h3>Usage</h3>
@@ -12,7 +11,7 @@
 <table style="width: 100%;">
 <tr>
 	<td><code>create</code></td>
-	<td>Generate new firewall ruleset.</td>
+	<td>Generate new firewall ruleset and login service.</td>
 </tr>
 <tr>
 	<td><code>list</code></td>
@@ -39,16 +38,28 @@ Preventing passive and nonconsensual telemetry, and the infringement of one's pr
 <br>
 <h3>Name Origin</h3>
 <p>
-Dissecting the admittedly deliberate etymology of <i>sirubo (pronounced as <u>seer-rue-bow</u>)</i>, <i>"si"</i> references silicon's chemical symbol, <b>Si</b>, which serves as a subtle reference to Silicon Valley thereafter. <i>"rubo"</i> is a word of the universal auxiliary language of <a href="https://wikipedia.org/wiki/Esperanto">Esperanto</a>, meaning <i>"trash"</i> or <i>"garbage."</i>
+Dissecting the etymology of sirubo (<i>pronounced as <u>seer-rue-bow</u></i>), "<b>si</b>" refers to the silicon chemical symbol (Si), which is in reference to <b>Silicon Valley</b>. "<b>rubo</b>" is a word of the universal auxiliary language of <a href="https://wikipedia.org/wiki/Esperanto">Esperanto</a>, meaning "<b>trash</b>" or "<b>garbage</b>".
 </p>
 
 <br>
 <h3>Requirements</h3>
-<table>
-<tr><th>Linux</th></tr>
-<tr><td><code>nftables</code></td></tr>
-<tr><td><code>systemd</code></td></tr>
-<tr><td><code>whois</code></td></tr>
+<table style="max-width: 75%; text-align: left; border: 1px solid black; padding: 10px;">
+<tr>
+	<th style="padding-bottom: 10px; padding-right: 10px; border-bottom: 1px solid black;">OpenBSD</th>
+	<th style="padding-bottom: 10px; border-bottom: 1px solid black;">Linux</th>
+</tr>
+<tr>
+	<td style="padding-top: 10px;"><code>pf</code></td>
+	<td style="padding-top: 10px;"><code>nftables</code></td>
+</tr>
+<tr>
+	<td><code>whois</code></td>
+	<td><code>systemd</code></td>
+</tr>
+<tr>
+	<td><code></code></td>
+	<td><code>whois</code></td>
+</tr>
 </table>
 
 <br>
@@ -79,6 +90,8 @@ AS8075
 <pre>
 sudo sirubo create
 </pre>
+
+<p>In addition, a login service will be created, enabling ruleset persistency and automatic ruleset updates upon system reboots.</p>
 
 <li>To test your new firewall ruleset, attempt to open a TCP connection with a domain name or IP address associated with a specified ASN:</li>
 
