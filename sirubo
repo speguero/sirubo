@@ -82,7 +82,7 @@ main()
 
 			# Add Rules to Reject ASN Prefixes:
 			
-			if ! [ -z "$list_prefixes_ipv4" ]
+			if [ -n "$list_prefixes_ipv4" ]
 			then
 				printf "%s\n" "$list_prefixes_ipv4" | while IFS= read -r prefix
 				do
@@ -90,7 +90,7 @@ main()
 				done
 			fi
 
-			if ! [ -z "$list_prefixes_ipv6" ]
+			if [ -n "$list_prefixes_ipv6" ]
 			then
 				printf "%s\n" "$list_prefixes_ipv6" | while IFS= read -r prefix
 				do
@@ -143,7 +143,7 @@ main()
 
 			# Add Rules to Reject ASN Prefixes:
 
-			if ! [ -z "$list_prefixes_ipv4" ]
+			if [ -n "$list_prefixes_ipv4" ]
 			then
 				printf "%s\n" "$list_prefixes_ipv4" | while IFS= read -r prefix
 				do
@@ -151,7 +151,7 @@ main()
 				done
 			fi
 
-			if ! [ -z "$list_prefixes_ipv6" ]
+			if [ -n "$list_prefixes_ipv6" ]
 			then
 				printf "%s\n" "$list_prefixes_ipv6" | while IFS= read -r prefix
 				do
