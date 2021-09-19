@@ -71,7 +71,7 @@ main()
 
 			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
 			then
-				>&2 printf "> error: ASN queries did not return any prefix results.\n"
+				>&2 printf "> error: asn queries did not return any prefix results.\n"
 				exit 1
 			fi
 
@@ -134,7 +134,7 @@ main()
 
 			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
 			then
-				>&2 printf "> error: ASN queries did not return any prefix results.\n"
+				>&2 printf "> error: asn queries did not return any prefix results.\n"
 				exit 1
 			fi
 
@@ -183,7 +183,7 @@ main()
 			less "$fpath_ruleset"
 			exit
 		else
-			>&2 printf "> error: Firewall ruleset not found.\n"
+			>&2 printf "> error: firewall ruleset not found.\n"
 			exit 1
 		fi
 	fi
@@ -231,7 +231,7 @@ confirm_asn()
 	whoisdomain="$1"
 	list_asn="$2"
 	
-	printf "\n> Retrieving prefixes of the following ASNs:\n\n"
+	printf "\n> retrieving asn prefixes from:\n\n"
 	printf "%s\n" "$list_asn" | while IFS= read -r asn
 	do
 		printf "  %s\n" "$asn"
@@ -242,12 +242,12 @@ confirm_asn()
 	do
 		if ! whois -h "$whoisdomain" -- -i origin "$asn" | grep -Eq '^route\:'
 		then
-			>&2 printf "> warn: ASN \"%s\" did not return IPv4 prefix results.\n" "$asn"
+			>&2 printf "> warn: asn \"%s\" did not return ipv4 prefix results.\n" "$asn"
 		fi
 
 		if ! whois -h "$whoisdomain" -- -i origin "$asn" | grep -Eq '^route6\:'
 		then
-			>&2 printf "> warn: ASN \"%s\" did not return IPv6 prefix results.\n" "$asn"
+			>&2 printf "> warn: asn \"%s\" did not return ipv6 prefix results.\n" "$asn"
 		fi
 	done
 }
@@ -260,7 +260,7 @@ confirm_prereqs()
 
 	if ! [ -f "$fpath_conf" ]
 	then
-		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$fpath_conf"
+		printf "  info: creating configuration file at \"%s\". specify at least one asn before continuing.\n" "$fpath_conf"
 		touch "$fpath_conf" && \
 			chown 0:0 "$fpath_conf" && \
 			chmod 600 "$fpath_conf"
@@ -269,7 +269,7 @@ confirm_prereqs()
 
 	if ! grep -Eqo "^AS[^ ]+" "$fpath_conf"
 	then
-		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$fpath_conf"
+		>&2 printf "> error: configuration file \"%s\" does not contain at least one asn.\n" "$fpath_conf"
 		return 1
 	fi
 
@@ -319,7 +319,7 @@ confirm_root()
 
 	if [ "$(id -u)" != 0 ]
 	then
-		>&2 printf "> error: Not running as root.\n"
+		>&2 printf "> error: not running as root.\n"
 		return 1
 	fi
 
@@ -355,7 +355,7 @@ print_prefixes_ipv6()
 usage()
 {
 	cat <<EOF
-usage: $(basename "$0") [command]
+usage: $(basename "$0") [argument]
 
   create    Generate new firewall ruleset.
   list      Display existing firewall ruleset.
