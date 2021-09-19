@@ -235,19 +235,14 @@ confirm_asn()
 
 confirm_network_connection()
 {
-	local bool_pingloop=0
 	local whoisdomain="$1"
 
-	until ping -q -c 3 "$whoisdomain" > /dev/null 2>&1
-	do
-		bool_pingloop=1
-		printf "  info: Cannot ping \"%s\". Will not proceed until I can...\r" "$whoisdomain"
-		sleep 1
-	done
-
-	if [ "$bool_pingloop" = 1 ]
+	if nc -w 1 "$whoisdomain" 43
 	then
-		printf "\n"
+		return
+	else
+		>&2 printf "> warn: \"%s\" unable to receive WHOIS requests.\n" "$whoisdomain"
+		exit 2
 	fi
 }
 
