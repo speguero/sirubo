@@ -48,7 +48,7 @@ main()
 	then
 		# Import Program Configuration File:
 
-		list_asn="$(cat "$fpath_conf" | egrep -o "^AS[^ ]+")"
+		list_asn="$(cat "$fpath_conf" | grep -Eo "^AS[^ ]+")"
 
 		# Create Firewall Ruleset Configuration File:
 
@@ -56,7 +56,7 @@ main()
 		then
 			# Create Anchor in pf.conf:
 
-			if ! cat "/etc/pf.conf" | egrep -q "^anchor $name_program$"
+			if ! cat "/etc/pf.conf" | grep -Eq "^anchor $name_program$"
 			then
 				printf "anchor $name_program" >> "/etc/pf.conf"
 			fi
@@ -221,12 +221,12 @@ confirm_asn()
 
 	printf "$list_asn\n" | while IFS= read -r asn
 	do
-		if ! whois -h "$whoisdomain" -- -i origin "$asn" | egrep -q '^route\:'
+		if ! whois -h "$whoisdomain" -- -i origin "$asn" | grep -Eq '^route\:'
 		then
 			>&2 printf "> warn: ASN \"%s\" did not return IPv4 prefix results.\n" "$asn"
 		fi
 
-		if ! whois -h "$whoisdomain" -- -i origin "$asn" | egrep -q '^route6\:'
+		if ! whois -h "$whoisdomain" -- -i origin "$asn" | grep -Eq '^route6\:'
 		then
 			>&2 printf "> warn: ASN \"%s\" did not return IPv6 prefix results.\n" "$asn"
 		fi
@@ -257,7 +257,7 @@ confirm_prerequisites()
 		return 1
 	fi
 
-	if ! cat "$1" | egrep -qo "^AS[^ ]+"
+	if ! cat "$1" | grep -Eqo "^AS[^ ]+"
 	then
 		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
 		return 2
