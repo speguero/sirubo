@@ -48,7 +48,7 @@ main()
 	then
 		# Import Program Configuration File:
 
-		list_asn="$(cat "$fpath_conf" | grep -Eo "^AS[^ ]+")"
+		list_asn="$(grep -Eo "^AS[^ ]+" "$fpath_conf")"
 
 		# Create Firewall Ruleset Configuration File:
 
@@ -56,7 +56,7 @@ main()
 		then
 			# Create Anchor in pf.conf:
 
-			if ! cat "/etc/pf.conf" | grep -Eq "^anchor $name_program$"
+			if ! grep -Eq "^anchor $name_program$" "/etc/pf.conf"
 			then
 				printf "anchor %s" "$name_program" >> "/etc/pf.conf"
 			fi
@@ -122,10 +122,12 @@ main()
 			test -f "$fpath_ruleset.tmp" && rm -f "$fpath_ruleset.tmp"
 			touch "$fpath_ruleset.tmp"
 
-			printf "#!/usr/sbin/nft -f\n\n"                                                                                         >> "$fpath_ruleset.tmp"
-			printf "add table inet %s\n" "$name_program"                                                                            >> "$fpath_ruleset.tmp"
-			printf "flush table inet %s\n" "$name_program"                                                                          >> "$fpath_ruleset.tmp"
-			printf "add chain inet %s %s { type filter hook output priority 0 ; policy accept; }\n" "$name_program" "$name_program" >> "$fpath_ruleset.tmp"
+			{
+				printf '#!/usr/sbin/nft -f\n\n'
+				printf 'add table inet %s\n' "$name_program"
+				printf 'flush table inet %s\n' "$name_program"
+				printf 'add chain inet %s %s { type filter hook output priority 0 ; policy accept; }\n' "$name_program" "$name_program"
+			} > "$fpath_ruleset.tmp"
 
 			# Perform WHOIS Query of ASN(s) for Prefixes:
 
@@ -257,7 +259,7 @@ confirm_prerequisites()
 		return 1
 	fi
 
-	if ! cat "$1" | grep -Eqo "^AS[^ ]+"
+	if ! grep -Eqo "^AS[^ ]+" "$1"
 	then
 		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
 		return 2
