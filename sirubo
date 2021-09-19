@@ -250,18 +250,20 @@ confirm_network_connection()
 
 confirm_prerequisites()
 {
-	if ! [ -f "$1" ]
+	fpath_conf="$1"
+
+	if ! [ -f "$fpath_conf" ]
 	then
-		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$1"
-		touch "$1" && \
-			chown 0:0 "$1" && \
-			chmod 600 "$1"
+		printf "  info: Creating configuration file at \"%s\". Specify at least one ASN before continuing.\n" "$fpath_conf"
+		touch "$fpath_conf" && \
+			chown 0:0 "$fpath_conf" && \
+			chmod 600 "$fpath_conf"
 		return 1
 	fi
 
-	if ! grep -Eqo "^AS[^ ]+" "$1"
+	if ! grep -Eqo "^AS[^ ]+" "$fpath_conf"
 	then
-		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$1"
+		>&2 printf "> error: Configuration file (%s) does not contain at least one ASN. Specify before continuing.\n" "$fpath_conf"
 		return 2
 	fi
 
