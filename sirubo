@@ -63,11 +63,7 @@ main()
 
 			# Perform WHOIS Query of ASN(s) for Prefixes:
 
-			if ! confirm_network_connection "$whoisdomain"
-			then
-				exit 1
-			fi
-
+			wait_net_conn "$whoisdomain"
 			confirm_asn "$whoisdomain" "$list_asn"
 
 			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
@@ -130,12 +126,7 @@ main()
 
 			# Perform WHOIS Query of ASN(s) for Prefixes:
 
-
-			if ! confirm_network_connection "$whoisdomain"
-			then
-				exit 1
-			fi
-
+			wait_net_conn "$whoisdomain"
 			confirm_asn "$whoisdomain" "$list_asn"
 
 			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
@@ -224,6 +215,13 @@ confirm_asn()
 {
 	whoisdomain="$1"
 	list_asn="$2"
+	
+	printf "\n> Retrieving prefixes of the following ASNs:\n\n"
+	printf "%s\n" "$list_asn" | while IFS= read -r asn
+	do
+		printf "  %s\n" "$asn"
+	done
+	printf "\n"
 
 	printf "%s\n" "$list_asn" | while IFS= read -r asn
 	do
@@ -237,19 +235,6 @@ confirm_asn()
 			>&2 printf "> warn: ASN \"%s\" did not return IPv6 prefix results.\n" "$asn"
 		fi
 	done
-}
-
-confirm_network_connection()
-{
-	whoisdomain="$1"
-
-	if nc -w 1 "$whoisdomain" 43 > /dev/null 2>&1
-	then
-		return 0
-	else
-		>&2 printf "> error: Host \"%s\" unable to receive WHOIS requests or offline.\n" "$whoisdomain"
-		return 1
-	fi
 }
 
 confirm_prereqs()
@@ -400,6 +385,16 @@ rc_start() {
 
 rc_cmd \$1
 EOF
+}
+
+wait_net_conn()
+{
+	whoisdomain="$1"
+
+	until nc -w 1 "$whoisdomain" 43 > /dev/null 2>&1
+	do
+		sleep 1
+	done
 }
 
 main "$@"
