@@ -176,6 +176,18 @@ main()
 		exit
 	fi
 
+	if [ "$*" = "list" ]
+	then
+		if [ -f "$fpath_ruleset" ]
+		then
+			less "$fpath_ruleset"
+			exit
+		else
+			>&2 printf "> error: Firewall ruleset not found.\n"
+			exit 1
+		fi
+	fi
+
 	if [ "$*" = "resume" ]
 	then
 		if [ "$name_os" = "OpenBSD" ]
@@ -343,12 +355,12 @@ print_prefixes_ipv6()
 usage()
 {
 	cat <<EOF
-Usage: $(basename "$0") [command]
+usage: $(basename "$0") [command]
 
-  help      This very message.
-  create    Generate firewall reject rules.
-  stop      Undo firewall reject rules.
-  resume    Resume enforcement of cached firewall reject rules.
+  create    Generate new firewall ruleset.
+  list      Display existing firewall ruleset.
+  resume    Resume enforcement of existing firewall ruleset.
+  stop      Delete existing firewall ruleset and login service.
 EOF
 
 	exit 1
