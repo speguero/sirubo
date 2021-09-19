@@ -1,5 +1,18 @@
 #!/bin/sh -ue
 
+#            .__            ___.           
+#       _____|__|______ __ _\_ |__   ____  
+#      /  ___/  \_  __ \  |  \ __ \ /  _ \ 
+#      \___ \|  ||  | \/  |  / \_\ (  <_> )
+#     /____  >__||__|  |____/|___  /\____/ 
+#          \/                    \/        
+#                    v0.2
+#
+#      ASN prefix (big tech conglomerate)
+#           outbound traffic blocker.
+#
+#  "Special shout-out to Google and Facebook!"
+
 umask u=rw,go=
 
 list_asn=
