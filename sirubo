@@ -239,11 +239,11 @@ confirm_network_connection()
 {
 	whoisdomain="$1"
 
-	if nc -w 1 "$whoisdomain" 43
+	if nc -w 1 "$whoisdomain" 43 > /dev/null 2>&1
 	then
 		return
 	else
-		>&2 printf "> warn: \"%s\" unable to receive WHOIS requests.\n" "$whoisdomain"
+		>&2 printf "> error: Host \"%s\" unable to receive WHOIS requests or offline.\n" "$whoisdomain"
 		exit 2
 	fi
 }
