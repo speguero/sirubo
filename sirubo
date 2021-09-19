@@ -213,6 +213,9 @@ main()
 
 confirm_asn()
 {
+	# Report, to user, ASNs they have specified and nonexistent ASN IPv4
+	# and/or IPv6 prefixes.
+
 	whoisdomain="$1"
 	list_asn="$2"
 	
@@ -239,6 +242,8 @@ confirm_asn()
 
 confirm_prereqs()
 {
+	# Ensure program prerequisites exist.
+
 	fpath_conf="$1"
 
 	if ! [ -f "$fpath_conf" ]
@@ -298,6 +303,8 @@ confirm_prereqs()
 
 confirm_root()
 {
+	# Ensure program is running under root.
+
 	if [ "$(id -u)" != 0 ]
 	then
 		>&2 printf "> error: Not running as root.\n"
@@ -309,6 +316,8 @@ confirm_root()
 
 print_prefixes_ipv4()
 {
+	# Return list of IPv4 prefixes of specified ASN.
+
 	whoisdomain="$1"
 	list_asn="$2"
 
@@ -320,6 +329,8 @@ print_prefixes_ipv4()
 
 print_prefixes_ipv6()
 {
+	# Return list of IPv6 prefixes of specified ASN.
+
 	whoisdomain="$1"
 	list_asn="$2"
 
@@ -389,6 +400,10 @@ EOF
 
 wait_net_conn()
 {
+	# To account for system reboots and network connectivity delays
+	# thereafter, wait until a TCP connection to port 43 of the WHOIS
+	# host opens.
+
 	whoisdomain="$1"
 
 	until nc -w 1 "$whoisdomain" 43 > /dev/null 2>&1
