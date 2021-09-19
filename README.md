@@ -19,11 +19,11 @@
 </tr>
 <tr>
 	<td><code>resume</code></td>
-	<td>Resume enforcement of existing firewall ruleset.</td>
+	<td>Resume enforcement of existing firewall ruleset and enable login service.</td>
 </tr>
 <tr>
 	<td><code>stop</code></td>
-	<td>Delete existing firewall ruleset and login service.</td>
+	<td>Disable existing firewall ruleset and login service.</td>
 </tr>
 </table>
 </ol>

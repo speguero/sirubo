@@ -414,10 +414,10 @@ usage()
 	cat <<EOF
 usage: $(basename "$0") [argument]
 
-  create    Generate new firewall ruleset.
+  create    Generate new firewall ruleset and login service.
   list      Display existing firewall ruleset.
-  resume    Resume enforcement of existing firewall ruleset.
-  stop      Delete existing firewall ruleset and login service.
+  resume    Resume enforcement of existing firewall ruleset and enable login service.
+  stop      Disable existing firewall ruleset and login service.
 EOF
 
 	exit 1
