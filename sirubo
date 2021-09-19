@@ -373,7 +373,7 @@ print_linux_systemd_service_file()
 
 	cat <<EOF
 [Unit]
-Description=$name_program - ASN IP outbound traffic blocker
+Description=$name_program - ASN prefix outbound traffic blocker
 After=network-online.target
 
 [Service]
