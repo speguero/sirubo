@@ -1,0 +1,116 @@
+sirubo
+======
+
+ASN prefix (big tech conglomerate) outbound traffic blocker.
+
+
+USAGE
+=====
+
+sirubo [argument]
+
+  create    Generate new firewall ruleset and login service.
+  list      Display existing firewall ruleset.
+  resume    Resume enforcement of existing firewall ruleset and enable
+            login service.
+  stop      Disable existing firewall ruleset and login service.
+
+
+SYNOPSIS
+========
+
+sirubo is a POSIX shell script that leverages:
+
+  - whois, to perform a query for autonomous system number, or ASN,
+    prefixes, such as 8.8.8.8/24.
+
+  - nftables on Linux and pf on OpenBSD, to impose firewall rules that
+    reject outgoing traffic to IPv4 and IPv6 addresses associated with
+    the aforementioned ASN prefixes.
+
+
+PURPOSE
+=======
+
+Preventing passive and nonconsensual telemetry, and the infringement of
+one's privacy thereafter, from impertinently inquisitive big tech
+conglomerates, such as Facebook and Alphabet (Google).
+
+
+NAME ORIGIN
+===========
+
+Dissecting the etymology of sirubo (pronounced as seer-rue-bow), "si"
+refers to the silicon chemical symbol (Si), which is in reference to
+Silicon Valley. "rubo" is a word of the universal auxiliary language of
+Esperanto, meaning "trash" or "garbage".
+
+
+REQUIREMENTS
+============
+
+OpenBSD | Linux
+------- | -----
+pf      | nftables
+whois   | whois
+        | systemd
+
+
+INSTALLING
+==========
+
+1) Install sirubo and create a configuration file:
+
+% sudo make
+
+2) To illustrate, add the following two lines of ASNs to
+   "/usr/local/etc/sirubo.conf":
+
+AS15169 # Facebook
+AS32934 # Google
+
+3) Generate a new firewall ruleset:
+
+% sirubo create
+
+   In addition, a login service will be created, enabling ruleset
+   persistency and automatic ruleset updates upon system reboots.
+
+4) Test your new firewall ruleset. Attempt to open a TCP connection with
+   a domain name or IP address associated with a specified ASN:
+
+% nc -vw 1 google.com 443
+
+   Which should print output such as this:
+
+> nc: connect to google.com (0.0.0.0) port 443 (tcp) failed: Connection
+> refused
+
+   This will indicate that your firewall is configured to reject
+   outbound traffic to google.com.
+
+
+UNINSTALLING
+============
+
+1) From its repository, run the following to uninstall sirubo:
+
+% make uninstall
+
+   Or run the following to uninstall sirubo and delete its
+   configuration file:
+
+% make clean
+
+
+SCREENCAPS
+==========
+
+Refer to preview GIF files located within the src/ directory for
+recorded illustrations of this project.
+
+
+LICENSE
+=======
+
+Refer to the LICENSE file for details.
