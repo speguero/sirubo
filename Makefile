@@ -2,6 +2,7 @@
 fname_bin=sirubo
 fpath_bin=/usr/local/bin/$(fname_bin)
 fpath_conf=/usr/local/etc/$(fname_bin).conf
+fpath_ruleset=/usr/local/etc/$(fname_bin).ruleset
 fname_service_linux=$(fname_bin).service
 fpath_service_linux=/etc/systemd/system/$(fname_bin).service
 os := $(shell uname -s)
@@ -25,4 +26,5 @@ uninstall:
 
 clean: uninstall
 	rm -f "$(fpath_conf)"
-
+	-rm -f "$(fpath_ruleset)"
+	-rm -f "$(fpath_ruleset).backup"
