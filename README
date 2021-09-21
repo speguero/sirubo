@@ -1,11 +1,12 @@
-sirubo
-======
 
-ASN prefix (big tech conglomerate) outbound traffic blocker.
+                                 SIRUBO
 
+      ASN prefix (big tech conglomerate) outbound traffic blocker.
 
-USAGE
-=====
+------------------------------------------------------------------------
+
+SYNOPSIS
+========
 
 sirubo [argument]
 
@@ -16,21 +17,20 @@ sirubo [argument]
   stop      Disable existing firewall ruleset and login service.
 
 
-SYNOPSIS
-========
+DESCRIPTION
+===========
 
-sirubo is a POSIX shell script that leverages:
+The sirubo utility is a POSIX shell script that makes use of:
 
-  - whois, to perform a query for autonomous system number, or ASN,
-    prefixes, such as 8.8.8.8/24.
+  - nftables on Linux and pf on OpenBSD, to facilitate the rejection of
+    outgoing traffic to prefixes (subnets) associated with autonomous
+    system networks (ASNs) that you, the user, specify.
 
-  - nftables on Linux and pf on OpenBSD, to impose firewall rules that
-    reject outgoing traffic to IPv4 and IPv6 addresses associated with
-    the aforementioned ASN prefixes.
+  - whois, to perform a query for ASN prefixes (subnets).
 
 
-PURPOSE
-=======
+MOTIVE
+======
 
 Preventing passive and nonconsensual telemetry, and the infringement of
 one's privacy thereafter, from impertinently inquisitive big tech
