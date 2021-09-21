@@ -1,7 +1,6 @@
 <h1>sirubo</h1>
 <p style="line-height: 165%;">ASN prefix (big tech conglomerate) outbound traffic blocker.</p>
 
-<br>
 <h3>Usage</h3>
 
 <code>sirubo [argument]</code>
@@ -28,20 +27,24 @@
 </table>
 </ol>
 
-<br>
 <h3>Purpose</h3>
 
 <p>
 Preventing passive and nonconsensual telemetry, and the infringement of one's privacy thereafter, from impertinently inquisitive big tech conglomerates, such as Facebook and Alphabet (Google).
 </p>
 
-<br>
+<h3>Synopsis</h3>
+<p>sirubo is a POSIX shell script that leverages:</p>
+<ul>
+	<li><code>whois</code>, to perform a query for <a href='https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29'>autonomous system number</a>, or ASN, prefixes, such as <code>8.8.8.8/24</code>.</li>
+	<li><code>nftables</code> on Linux and <code>pf</code> on OpenBSD, to impose firewall rules that reject outgoing traffic to IPv4 and IPv6 addresses associated with the aforementioned ASN prefixes.</li>
+</ul>
+
 <h3>Name Origin</h3>
 <p>
 Dissecting the etymology of sirubo (<i>pronounced as <u>seer-rue-bow</u></i>), "<b>si</b>" refers to the silicon chemical symbol (Si), which is in reference to <b>Silicon Valley</b>. "<b>rubo</b>" is a word of the universal auxiliary language of <a href="https://wikipedia.org/wiki/Esperanto">Esperanto</a>, meaning "<b>trash</b>" or "<b>garbage</b>".
 </p>
 
-<br>
 <h3>Requirements</h3>
 <table style="max-width: 75%; text-align: left; border: 1px solid black; padding: 10px;">
 <tr>
@@ -62,7 +65,6 @@ Dissecting the etymology of sirubo (<i>pronounced as <u>seer-rue-bow</u></i>), "
 </tr>
 </table>
 
-<br>
 <h3>Installing</h3>
 <ol>
 <li>Install sirubo and create a configuration file:</li>
@@ -108,7 +110,6 @@ nc: connect to example.com (0.0.0.0) port 443 (tcp) failed: Connection refused
 <p>This will indicate that your firewall is configured to reject outbound traffic to <code>example.com</code>.</p>
 </ol>
 
-<br>
 <h3>Uninstalling</h3>
 <ol>
 <li>From its git repository, run the following to uninstall sirubo:
@@ -124,11 +125,9 @@ make clean
 </pre>
 </ol>
 
-<br>
 <h3>Previews</h3>
 <p>Refer to <code>preview</code> GIF files located within the <code>src/</code> directory for recorded examples of this project's use case.</p>
 
-<br>
 <h3>License</h3>
 
 <p>Refer to the LICENSE file for details.
