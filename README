@@ -5,16 +5,20 @@
 
 ------------------------------------------------------------------------
 
+
 SYNOPSIS
 ========
 
-sirubo [argument]
+sirubo [-c] [-f] [-r] [-s]
 
-  create    Generate new firewall ruleset and login service.
-  list      Display existing firewall ruleset.
-  resume    Resume enforcement of existing firewall ruleset and enable
-            login service.
-  stop      Disable existing firewall ruleset and login service.
+  -c    Create firewall ruleset and ruleset persistency service.
+
+  -f    Show cached firewall ruleset.
+
+  -r    Resume enforcement of cached firewall ruleset and enable ruleset
+        persistency service.
+
+  -s    Disable cached firewall ruleset and ruleset persistency service.
 
 
 DESCRIPTION
@@ -56,8 +60,8 @@ whois   | whois
         | systemd
 
 
-INSTALLING
-==========
+INSTALL
+=======
 
 1) Install sirubo and create a configuration file:
 
@@ -73,7 +77,7 @@ AS32934 # Google
 
 % sirubo create
 
-   In addition, a login service will be created, enabling ruleset
+   Upon this command, a service will also be created, enabling ruleset
    persistency and automatic ruleset updates upon system reboots.
 
 4) Test your new firewall ruleset. Attempt to open a TCP connection with
@@ -90,8 +94,8 @@ AS32934 # Google
    outbound traffic to google.com.
 
 
-UNINSTALLING
-============
+UNINSTALL
+=========
 
 1) From its repository, run the following to uninstall sirubo:
 

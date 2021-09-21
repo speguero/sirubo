@@ -37,7 +37,7 @@ fi
 
 main()
 {
-	if [ "$*" = "" ] || [ "$*" = "help" ] || [ "$*" = "-h" ]
+	if [ "$*" = "" ] || [ "$*" = "-h" ]
 	then
 		usage
 	fi
@@ -52,7 +52,7 @@ main()
 		exit 1
 	fi
 
-	if [ "$*" = "create" ]
+	if [ "$*" = "-c" ]
 	then
 		# Import Program Configuration File:
 
@@ -189,7 +189,7 @@ main()
 		exit
 	fi
 
-	if [ "$*" = "list" ]
+	if [ "$*" = "-f" ]
 	then
 		if [ -f "$fpath_ruleset" ]
 		then
@@ -201,7 +201,7 @@ main()
 		fi
 	fi
 
-	if [ "$*" = "resume" ]
+	if [ "$*" = "-r" ]
 	then
 		if [ "$name_os" = "OpenBSD" ]
 		then
@@ -218,7 +218,7 @@ main()
 		exit
 	fi
 
-	if [ "$*" = "stop" ]
+	if [ "$*" = "-s" ]
 	then
 		if [ "$name_os" = "OpenBSD" ]
 		then
@@ -378,7 +378,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStartPre=/usr/sbin/nft -f "$fpath_ruleset"
-ExecStart=/usr/local/bin/sirubo create
+ExecStart=/usr/local/bin/$name_program -c
 
 [Install]
 WantedBy=multi-user.target
@@ -402,7 +402,7 @@ rc_pre() {
 }
 
 rc_start() {
-	\${rcexec} "(\${daemon} create &)"
+	\${rcexec} "(\${daemon} -c &)"
 }
 
 rc_cmd \$1
@@ -412,12 +412,18 @@ EOF
 usage()
 {
 	cat <<EOF
-usage: $(basename "$0") [argument]
+usage: $(basename "$0") [-c] [-f] [-r] [-s]
 
-  create    Generate new firewall ruleset and login service.
-  list      Display existing firewall ruleset.
-  resume    Resume enforcement of existing firewall ruleset and enable login service.
-  stop      Disable existing firewall ruleset and login service.
+  -c    Create firewall ruleset and ruleset
+        persistency service.
+
+  -f    Show cached firewall ruleset.
+
+  -r    Resume enforcement of cached firewall ruleset
+        and enable ruleset persistency service.
+
+  -s    Disable cached firewall ruleset and ruleset
+        persistency service.
 EOF
 
 	exit 1
