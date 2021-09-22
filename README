@@ -43,9 +43,9 @@ DESCRIPTION
 
 The sirubo utility is a POSIX shell script that makes use of:
 
-  - nftables on Linux and pf on OpenBSD, to facilitate the rejection of
-    outgoing traffic to prefixes (subnets) associated with autonomous
-    system networks (ASNs) that you, the user, specify.
+  - Transport-layer packet filtering; in particular, nftables on Linux
+    and pf on OpenBSD, to facilitate the rejection of outgoing traffic
+    to autonomous system network, or ASN, prefixes (subnets).
 
   - whois, to perform a query for ASN prefixes (subnets).
 
