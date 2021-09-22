@@ -36,11 +36,12 @@ The sirubo utility is a POSIX shell script that makes use of:
 REQUIREMENTS
 ============
 
-OpenBSD | Linux
-------- | -----
-pf      | nftables
-whois   | whois
-        | systemd
+  Linux    | OpenBSD
+  -----    | -------
+  nftables | pf
+  whois    | whois
+  systemd  |
+
 
 MOTIVE
 ======
