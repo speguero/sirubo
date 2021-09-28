@@ -1,5 +1,6 @@
 fname_bin=sirubo
 fpath_bin=/usr/local/bin/$(fname_bin)
+dpath_conf=/usr/local/etc
 fpath_conf=/usr/local/etc/$(fname_bin).conf
 fpath_ruleset=/usr/local/etc/$(fname_bin).ruleset
 fname_service_linux=$(fname_bin).service
@@ -11,6 +12,7 @@ os := $(shell uname -s)
 
 install:
 
+	mkdir -p "$(dpath_conf)"
 	touch "$(fpath_conf)"
 	chown 0:0 "$(fpath_conf)"
 	chmod u=rw,go= "$(fpath_conf)"
