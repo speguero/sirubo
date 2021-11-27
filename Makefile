@@ -1,8 +1,8 @@
 fname_bin=sirubo
 fpath_bin=/usr/local/bin/$(fname_bin)
 dpath_conf=/usr/local/etc
-fpath_conf=/usr/local/etc/$(fname_bin).conf
-fpath_ruleset=/usr/local/etc/$(fname_bin).ruleset
+fpath_conf=$(dpath_conf)/$(fname_bin).conf
+fpath_ruleset=$(dpath_conf)/$(fname_bin).ruleset
 fname_service_linux=$(fname_bin).service
 fpath_service_linux=/etc/systemd/system/$(fname_bin).service
 fpath_service_openbsd=/etc/rc.d/$(fname_bin)
@@ -12,19 +12,35 @@ os := $(shell uname -s)
 
 install:
 
-	mkdir -p "$(dpath_conf)"
+	@# Configuration
+
+	if ! [ -d "$(dpath_conf)" ]; then \
+		mkdir "$(dpath_conf)"; \
+		chown 0:0 "$(dpath_conf)"; \
+		chmod u=rwx,go=rx "$(dpath_conf)"; \
+	fi
+
 	touch "$(fpath_conf)"
 	chown 0:0 "$(fpath_conf)"
 	chmod u=rw,go= "$(fpath_conf)"
+
+	@# Program
 	
 	cp -vf "$(fname_bin)" "$(fpath_bin)"
 	chown 0:0 "$(fpath_bin)"
 	chmod ugo=rx "$(fpath_bin)"
 
-	mkdir -p "$(dpath_doc)"
+	@# Documentation
+
+	if ! [ -d "$(dpath_doc)" ]; then \
+		mkdir "$(dpath_doc)"; \
+		chown 0:0 "$(dpath_doc)"; \
+		chmod u=rwx,go=rx "$(dpath_doc)"; \
+	fi
+
 	cp -vf "README" "$(fpath_doc)"
 	chown 0:0 "$(fpath_doc)"
-	chmod u=rw,go=r "$(fpath_doc)"
+	chmod ugo=r "$(fpath_doc)"
 
 uninstall:
 
