@@ -26,16 +26,20 @@ TABLE OF CONTENTS
 SYNOPSIS
 ========
 
-sirubo [-c] [-f] [-r] [-s]
+sirubo create|resume|show|stop
 
-  -c    Create firewall ruleset and ruleset persistency service.
+  create
+      Create firewall ruleset and ruleset persistency service.
 
-  -f    Show cached firewall ruleset.
+  resume
+      Resume enforcement of cached firewall ruleset and enable ruleset
+      persistency service.
 
-  -r    Resume enforcement of cached firewall ruleset and enable ruleset
-        persistency service.
+  show
+      Show cached firewall ruleset.
 
-  -s    Disable cached firewall ruleset and ruleset persistency service.
+  stop
+      Disable cached firewall ruleset and ruleset persistency service.
 
 
 DESCRIPTION

@@ -37,7 +37,7 @@ fi
 
 main()
 {
-	if [ "$*" = "" ] || [ "$*" = "-h" ]
+	if [ "$*" = "" ] || [ "$*" = "-h" ] || [ "$*" = "help" ]
 	then
 		usage
 	fi
@@ -52,7 +52,7 @@ main()
 		exit 1
 	fi
 
-	if [ "$*" = "-c" ]
+	if [ "$*" = "create" ]
 	then
 		# Import Program Configuration File:
 
@@ -189,7 +189,7 @@ main()
 		exit
 	fi
 
-	if [ "$*" = "-f" ]
+	if [ "$*" = "show" ]
 	then
 		if [ -f "$fpath_ruleset" ]
 		then
@@ -201,7 +201,7 @@ main()
 		fi
 	fi
 
-	if [ "$*" = "-r" ]
+	if [ "$*" = "resume" ]
 	then
 		if [ "$name_os" = "OpenBSD" ]
 		then
@@ -218,7 +218,7 @@ main()
 		exit
 	fi
 
-	if [ "$*" = "-s" ]
+	if [ "$*" = "stop" ]
 	then
 		if [ "$name_os" = "OpenBSD" ]
 		then
@@ -378,7 +378,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStartPre=/usr/sbin/nft -f "$fpath_ruleset"
-ExecStart=/usr/local/bin/$name_program -c
+ExecStart=/usr/local/bin/$name_program create
 
 [Install]
 WantedBy=multi-user.target
@@ -402,7 +402,7 @@ rc_pre() {
 }
 
 rc_start() {
-	\${rcexec} "(\${daemon} -c &)"
+	\${rcexec} "(\${daemon} create &)"
 }
 
 rc_cmd \$1
@@ -412,18 +412,22 @@ EOF
 usage()
 {
 	cat <<EOF
-usage: $(basename "$0") [-c] [-f] [-r] [-s]
+usage: $(basename "$0") create|resume|show|stop
 
-  -c    Create firewall ruleset and ruleset
-        persistency service.
+  create
+      Create firewall ruleset and ruleset
+      persistency service.
 
-  -f    Show cached firewall ruleset.
+  resume
+      Resume enforcement of cached firewall ruleset
+      and enable ruleset persistency service.
 
-  -r    Resume enforcement of cached firewall ruleset
-        and enable ruleset persistency service.
+  show
+      Show cached firewall ruleset.
 
-  -s    Disable cached firewall ruleset and ruleset
-        persistency service.
+  stop
+      Disable cached firewall ruleset and ruleset
+      persistency service.
 EOF
 
 	exit 1
