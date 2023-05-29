@@ -1,0 +1,14 @@
+image: debian/stable
+packages:
+  - nftables
+  - whois
+sources:
+  - https://git.sr.ht/~speguero/sirubo
+shell: true
+tasks:
+  - build: |
+      cd sirubo
+      sudo make install
+      echo AS32934 | sudo tee -a /usr/local/etc/sirubo.conf
+      sudo ./sirubo create
+      ping -c 1 facebook.com || exit 0

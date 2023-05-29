@@ -1,7 +1,10 @@
 <h1 align="center">sirubo</h1>
 
 <p align="center">
-        <em>ASN prefix (big tech conglomerate) outbound traffic blocker.</em>
+	<em>Blocks outbound tech conglomerate (AS) network traffic.</em>
+	<br>
+	<br>
+	<img src="https://builds.sr.ht/~speguero/sirubo.svg" alt="builds.sr.ht status">
 </p>
 
 <br>
@@ -30,17 +33,17 @@
 
 # Usage
 ```
-sirubo create|resume|show|stop
+sirubo [c|create] [h|halt|stop] [r|resume] [s|show]
 ```
 
 <br>
 
-  Command  | Description
-  ---      | ---
-  `create` | Create firewall ruleset and ruleset persistency service.
-  `resume` | Resume enforcement of cached firewall ruleset and enable ruleset persistency service.
-  `show`   | Show cached firewall ruleset.
-  `stop`   | Disable cached firewall ruleset and ruleset persistency service.
+  Command           | Description
+  ---               | ---
+  `c` `create`      | Create and start ruleset enforcement and persistence.
+  `h` `halt` `stop` | Stop ruleset enforcement and persistence.
+  `r` `resume`      | Resume ruleset enforcement and persistence.
+  `s` `show`        | Show ruleset.
 
 <br>
 
@@ -96,7 +99,7 @@ AS32934 # Google
 
 3. Create a new firewall ruleset:
 ```
-sirubo create
+sirubo c
 ```
 
 4. Test your newly created firewall ruleset:

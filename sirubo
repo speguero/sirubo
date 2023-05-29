@@ -1,375 +1,331 @@
 #!/bin/sh -ue
 
-#            .__            ___.           
-#       _____|__|______ __ _\_ |__   ____  
-#      /  ___/  \_  __ \  |  \ __ \ /  _ \ 
-#      \___ \|  ||  | \/  |  / \_\ (  <_> )
-#     /____  >__||__|  |____/|___  /\____/ 
-#          \/                    \/        
-#                    v0.3
+#                            .__            ___.           
+#                       _____|__|______ __ _\_ |__   ____  
+#                      /  ___/  \_  __ \  |  \ __ \ /  _ \ 
+#                      \___ \|  ||  | \/  |  / \_\ (  <_> )
+#                     /____  >__||__|  |____/|___  /\____/ 
+#                          \/                    \/        
+#                                    v0.4
+# 
+#            Blocks outbound tech conglomerate (AS) network traffic.
 #
-#      ASN prefix (big tech conglomerate)
-#           outbound traffic blocker.
 #
-#  "Special shout-out to Google and Facebook!"
+#  MIT License
+#  Copyright (c) 2020-2023 Steven Peguero
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#  SOFTWARE.
 
 umask u=rw,go=
 
+fpath_conf=
+fpath_ruleset=
+fname_service=
 list_asn=
 list_prefixes_ipv4=
 list_prefixes_ipv6=
-name_program="sirubo"
-name_os="$(uname -s)"
-whoisdomain="whois.radb.net"  # WHOIS domain to query for ASN prefixes.
+fqdn_whois="whois.radb.net"
+program="sirubo"
+os="$(uname -s | tr A-Z a-z)"
 
-if [ "$name_os" = "OpenBSD" ]
-then
-	fpath_conf="/etc/$name_program.conf"
-	fpath_ruleset="/etc/pf.$name_program.conf"
-fi
+case "${os}" in
+	openbsd)
+		fpath_conf="/etc/${program}.conf"
+		fpath_ruleset="/etc/pf.${program}.conf"
+		;;
+	linux)
+		fpath_conf="/usr/local/etc/${program}.conf"
+		fpath_ruleset="/usr/local/etc/${program}.ruleset"
+		fname_service="${program}.service"
+		;;
+esac
 
-if [ "$name_os" = "Linux" ]
-then
-	fpath_conf="/usr/local/etc/$name_program.conf"
-	fpath_ruleset="/usr/local/etc/$name_program.ruleset"
-	fname_service="$name_program.service"
-fi
+list_asn="$(grep -Eo "^AS[^ ]+" "${fpath_conf}")"
 
-main()
+cmd_create()
 {
-	if [ "$*" = "" ] || [ "$*" = "-h" ] || [ "$*" = "help" ]
-	then
-		usage
-	fi
+	#  create firewall ruleset file.
 
-	if ! confirm_root
-	then
-		exit 1
-	fi
-	
-	if ! confirm_prereqs "$fpath_conf"
-	then
-		exit 1
-	fi
+	#  create pf anchor:
 
-	if [ "$*" = "create" ]
-	then
-		# Import Program Configuration File:
-
-		list_asn="$(grep -Eo "^AS[^ ]+" "$fpath_conf")"
-
-		# Create Firewall Ruleset Configuration File:
-
-		if [ "$name_os" = "OpenBSD" ]
-		then
-			# Create Anchor in pf.conf:
-
-			if ! grep -Eq "^anchor $name_program$" "/etc/pf.conf"
+	case "${os}" in
+		openbsd)
+			if ! grep -Eq "^anchor ${program}$" "/etc/pf.conf"
 			then
-				printf "anchor %s" "$name_program" >> "/etc/pf.conf"
+				printf "anchor %s" "${program}" >> "/etc/pf.conf"
 			fi
+			;;
+	esac
 
-			# Create Ruleset:
+	#  create ruleset:
 
-			test -f "$fpath_ruleset.tmp" && rm -f "$fpath_ruleset.tmp"
-			touch "$fpath_ruleset.tmp"
+	test -f "${fpath_ruleset}.tmp" && rm -f "${fpath_ruleset}.tmp"
+	touch "${fpath_ruleset}.tmp"
 
-			# Perform WHOIS Query of ASN(s) for Prefixes:
-
-			wait_net_conn "$whoisdomain"
-			confirm_asn "$whoisdomain" "$list_asn"
-
-			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
-			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
-
-			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
-			then
-				>&2 printf "> error: asn queries did not return any prefix results.\n"
-				exit 1
-			fi
-
-			# Add Rules to Reject ASN Prefixes:
-			
-			if [ -n "$list_prefixes_ipv4" ]
-			then
-				printf "%s\n" "$list_prefixes_ipv4" | while IFS= read -r prefix
-				do
-					printf "block return on any inet from any to %s\n" "$prefix" >> "$fpath_ruleset.tmp"
-				done
-			fi
-
-			if [ -n "$list_prefixes_ipv6" ]
-			then
-				printf "%s\n" "$list_prefixes_ipv6" | while IFS= read -r prefix
-				do
-					printf "block return on any inet6 from any to %s\n" "$prefix" >> "$fpath_ruleset.tmp"
-				done
-			fi
-
-			# Create Service for Ruleset Persistency:
-
-			print_openbsd_service_file "$name_program" "$fpath_ruleset" > "/etc/rc.d/$name_program"
-			chmod ugo=rx "/etc/rc.d/$name_program"
-			rcctl enable "$name_program"
-
-			# Load Ruleset:
-
-			if [ -f "$fpath_ruleset" ]
-			then
-				mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
-			fi
-
-			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
-			pfctl -a "$name_program" -f "$fpath_ruleset"
-		fi
-
-		if [ "$name_os" = "Linux" ]
-		then
-			# Create Ruleset:
-
-			test -f "$fpath_ruleset.tmp" && rm -f "$fpath_ruleset.tmp"
-			touch "$fpath_ruleset.tmp"
-
+	case "${os}" in
+		linux)
 			{
 				printf '#!/usr/sbin/nft -f\n\n'
-				printf 'add table inet %s\n' "$name_program"
-				printf 'flush table inet %s\n' "$name_program"
-				printf 'add chain inet %s %s { type filter hook output priority 0 ; policy accept; }\n' "$name_program" "$name_program"
-			} > "$fpath_ruleset.tmp"
+				printf 'add table inet %s\n' "${program}"
+				printf 'flush table inet %s\n' "${program}"
+				printf 'add chain inet %s %s { type filter hook output priority 0 ; policy accept; }\n' "${program}" "${program}"
+			} > "${fpath_ruleset}.tmp"
+			;;
+	esac
 
-			# Perform WHOIS Query of ASN(s) for Prefixes:
+	#  perform whois query of asn(s) for prefixes:
 
-			wait_net_conn "$whoisdomain"
-			confirm_asn "$whoisdomain" "$list_asn"
+#	wait_net_conn
+	confirm_asn
 
-			list_prefixes_ipv4="$(print_prefixes_ipv4 "$whoisdomain" "$list_asn")"
-			list_prefixes_ipv6="$(print_prefixes_ipv6 "$whoisdomain" "$list_asn")"
+	list_prefixes_ipv4="$(print_prefixes_ipv4)"
+	list_prefixes_ipv6="$(print_prefixes_ipv6)"
 
-			if [ -z "$list_prefixes_ipv4" ] && [ -z "$list_prefixes_ipv6" ]
-			then
-				>&2 printf "> error: asn queries did not return any prefix results.\n"
-				exit 1
-			fi
+	if [ -z "${list_prefixes_ipv4}" ] && [ -z "${list_prefixes_ipv6}" ]
+	then
+		>&2 printf "> error: asn queries did not return any prefix results.\n"
+		exit 2
+	fi
 
-			# Add Rules to Reject ASN Prefixes:
+	#  add asn prefix reject rules:
 
-			if [ -n "$list_prefixes_ipv4" ]
-			then
-				printf "%s\n" "$list_prefixes_ipv4" | while IFS= read -r prefix
-				do
-					printf "add rule inet %s %s ip daddr %s reject\n" "$name_program" "$name_program" "$prefix" >> "$fpath_ruleset.tmp"
-				done
-			fi
+	if [ -n "${list_prefixes_ipv4}" ]
+	then
+		printf "%s\n" "${list_prefixes_ipv4}" | while IFS= read -r prefix
+		do
+			case "${os}" in
+				openbsd)
+					printf "block return on any inet from any to %s\n" "${prefix}" >> "${fpath_ruleset}.tmp"
+					;;
+				linux)
+					printf "add rule inet %s %s ip daddr %s reject\n" "${program}" "${program}" "${prefix}" >> "${fpath_ruleset}.tmp"
+					;;
+			esac
+		done
+	fi
 
-			if [ -n "$list_prefixes_ipv6" ]
-			then
-				printf "%s\n" "$list_prefixes_ipv6" | while IFS= read -r prefix
-				do
-					printf "add rule inet %s %s ip6 daddr %s reject\n" "$name_program" "$name_program" "$prefix" >> "$fpath_ruleset.tmp"
-				done
-			fi
+	if [ -n "${list_prefixes_ipv6}" ]
+	then
+		printf "%s\n" "${list_prefixes_ipv6}" | while IFS= read -r prefix
+		do
+			case "${os}" in
+				openbsd)
+					printf "block return on any inet6 from any to %s\n" "${prefix}" >> "${fpath_ruleset}.tmp"
+					;;
+				linux)
+					printf "add rule inet %s %s ip6 daddr %s reject\n" "${program}" "${program}" "${prefix}" >> "${fpath_ruleset}.tmp"
+					;;
+			esac
+		done
+	fi
 
-			# Create Service for Ruleset Persistency:
+	#  create ruleset persistency service:
 
-			print_linux_systemd_service_file "$name_program" "$fpath_ruleset" > "/etc/systemd/system/$fname_service"
+	case "${os}" in
+		openbsd)
+			print_openbsd_service_file > "/etc/rc.d/${program}"
+			chmod ugo=rx "/etc/rc.d/${program}"
+			rcctl enable "${program}"
+			;;
+		linux)
+			print_linux_systemd_service_file > "/etc/systemd/system/${fname_service}"
 			systemctl -q daemon-reload
-			systemctl -q reenable "$fname_service"
+			systemctl -q reenable "${fname_service}"
+			;;
+	esac
 
-			# Load Ruleset:
+	#  load ruleset:
 
-			if [ -f "$fpath_ruleset" ]
-			then
-				mv -f "$fpath_ruleset" "$fpath_ruleset.backup"
-			fi
-
-			mv -f "$fpath_ruleset.tmp" "$fpath_ruleset"
-			nft -f "$fpath_ruleset"
-		fi
-
-		exit
-	fi
-
-	if [ "$*" = "show" ]
+	if [ -f "${fpath_ruleset}" ]
 	then
-		if [ -f "$fpath_ruleset" ]
-		then
-			less "$fpath_ruleset"
-			exit
-		else
-			>&2 printf "> error: firewall ruleset not found.\n"
-			exit 1
-		fi
+		mv -f "${fpath_ruleset}" "${fpath_ruleset}.backup"
 	fi
 
-	if [ "$*" = "resume" ]
+	mv -f "${fpath_ruleset}.tmp" "${fpath_ruleset}"
+
+	case "${os}" in
+		openbsd)
+			pfctl -a "${program}" -f "${fpath_ruleset}"
+			;;
+		linux)
+			nft -f "${fpath_ruleset}"
+			;;
+	esac
+}
+
+cmd_show()
+{
+	if [ -f "${fpath_ruleset}" ]
 	then
-		if [ "$name_os" = "OpenBSD" ]
-		then
-			rcctl enable "$name_program"
-			pfctl -a "$name_program" -f "$fpath_ruleset"
-		fi
-
-		if [ "$name_os" = "Linux" ]
-		then
-			systemctl -q enable "$fname_service"
-			nft -f "$fpath_ruleset"
-		fi
-
-		exit
+		less "${fpath_ruleset}"
+		exit $?
+	else
+		>&2 printf "> error: firewall ruleset not found.\n"
+		exit 2
 	fi
+}
 
-	if [ "$*" = "stop" ]
-	then
-		if [ "$name_os" = "OpenBSD" ]
-		then
-			rcctl disable "$name_program"
-			pfctl -a "$name_program" -F rules 2> /dev/null
-		fi
+cmd_resume()
+{
+	case "${os}" in
+		openbsd)
+			rcctl enable "${program}"
+			pfctl -a "${program}" -f "${fpath_ruleset}"
+			;;
+		linux)
+			systemctl -q enable "${fname_service}"
+			nft -f "${fpath_ruleset}"
+			;;
+	esac
+}
 
-		if [ "$name_os" = "Linux" ]
-		then
-			systemctl -q disable "$fname_service"
-			nft delete table inet "$name_program" 2> /dev/null
-		fi
-
-		exit
-	fi
+cmd_halt()
+{
+	case "${os}" in
+		openbsd)
+			rcctl disable "${program}"
+			pfctl -a "${program}" -F rules 2> /dev/null
+			;;
+		linux)
+			systemctl -q disable "${fname_service}"
+			nft delete table inet "${program}" 2> /dev/null
+			;;
+	esac
 }
 
 confirm_asn()
 {
-	# Report, to user, ASNs they have specified and nonexistent ASN IPv4
-	# and/or IPv6 prefixes.
-
-	whoisdomain="$1"
-	list_asn="$2"
+	#  print configured asn list featuring ipv4 and/or ipv6 prefixes.
 	
 	printf "\n> retrieving asn prefixes from:\n\n"
-	printf "%s\n" "$list_asn" | while IFS= read -r asn
+	printf "%s\n" "${list_asn}" | while IFS= read -r asn
 	do
-		printf "  %s\n" "$asn"
+		printf "  %s\n" "${asn}"
 	done
 	printf "\n"
 
-	printf "%s\n" "$list_asn" | while IFS= read -r asn
+	printf "%s\n" "${list_asn}" | while IFS= read -r asn
 	do
-		if ! whois -h "$whoisdomain" -- -i origin "$asn" | grep -Eq '^route\:'
+		if ! whois -h "${fqdn_whois}" -- -i origin "${asn}" | grep -Eq '^route\:'
 		then
-			>&2 printf "> warn: asn \"%s\" did not return ipv4 prefix results.\n" "$asn"
+			>&2 printf "> warn: asn \"%s\" did not return ipv4 prefix results.\n" "${asn}"
 		fi
 
-		if ! whois -h "$whoisdomain" -- -i origin "$asn" | grep -Eq '^route6\:'
+		if ! whois -h "${fqdn_whois}" -- -i origin "${asn}" | grep -Eq '^route6\:'
 		then
-			>&2 printf "> warn: asn \"%s\" did not return ipv6 prefix results.\n" "$asn"
+			>&2 printf "> warn: asn \"%s\" did not return ipv6 prefix results.\n" "${asn}"
 		fi
 	done
 }
 
-confirm_prereqs()
+confirm_prerequisites()
 {
-	# Ensure program prerequisites exist.
+	#  ensure program prerequisites exist.
 
-	fpath_conf="$1"
-
-	if ! [ -f "$fpath_conf" ]
+	if ! [ -f "${fpath_conf}" ]
 	then
-		printf "  info: creating configuration file at \"%s\". specify at least one asn before continuing.\n" "$fpath_conf"
-		touch "$fpath_conf" && \
-			chown 0:0 "$fpath_conf" && \
-			chmod 600 "$fpath_conf"
+		printf "  info: creating configuration file at \"%s\". specify at least one asn before continuing.\n" "${fpath_conf}"
+		touch "${fpath_conf}" && \
+			chown 0:0 "${fpath_conf}" && \
+			chmod 600 "${fpath_conf}"
 		return 1
 	fi
 
-	if ! grep -Eqo "^AS[^ ]+" "$fpath_conf"
+	if ! grep -Eqo "^AS[^ ]+" "${fpath_conf}"
 	then
-		>&2 printf "> error: configuration file \"%s\" does not contain at least one asn.\n" "$fpath_conf"
+		>&2 printf "> error: configuration file \"%s\" does not contain at least one asn.\n" "${fpath_conf}"
 		return 1
 	fi
 
-	if [ "$name_os" = "OpenBSD" ]
-	then
-		if ! which pfctl > /dev/null 2>&1
-		then
-			>&2 printf "> error: \"pfctl\" is a prerequisite and was not found.\n"
-			return 1
-		fi
+	case "${os}" in
+		openbsd)
+			if ! command v pfctl > /dev/null 2>&1
+			then
+				>&2 printf "> error: \"pfctl\" is a prerequisite and was not found.\n"
+				return 1
+			fi
 
-		if ! which whois > /dev/null 2>&1
-		then
-			>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
-			return 1
-		fi
-	fi
+			if ! command -v whois > /dev/null 2>&1
+			then
+				>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
+				return 1
+			fi
+			;;
+		linux)
+			if ! pgrep -x systemd | head -1 | grep -q 1
+			then
+				>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
+				return 1
+			fi
 
-	if [ "$name_os" = "Linux" ]
-	then
+			if ! command -v nft > /dev/null 2>&1
+			then
+				>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
+				return 1
+			fi
 
-		if ! [ -d "/run/systemd/system" ]
-		then
-			>&2 printf "> error: \"systemd\" is a prerequisite and was not found.\n"
-			return 1
-		fi
-
-		if ! which nft > /dev/null 2>&1
-		then
-			>&2 printf "> error: \"nft\" is a prerequisite and was not found.\n"
-			return 1
-		fi
-
-		if ! which whois > /dev/null 2>&1
-		then
-			>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
-			return 1
-		fi
-	fi
+			if ! command -v whois > /dev/null 2>&1
+			then
+				>&2 printf "> error: \"whois\" is a prerequisite and was not found.\n"
+				return 1
+			fi
+			;;
+	esac
 
 	return 0
 }
 
 confirm_root()
 {
-	# Ensure program is running under root.
+	#  confirm program running under root.
 
 	if [ "$(id -u)" != 0 ]
 	then
 		>&2 printf "> error: not running as root.\n"
 		return 1
+	else
+		return 0
 	fi
-
-	return 0
 }
 
 print_prefixes_ipv4()
 {
-	# Return list of IPv4 prefixes of specified ASN.
+	#  return list of ipv4 prefixes of specified asn.
 
-	whoisdomain="$1"
-	list_asn="$2"
-
-	printf "%s\n" "$list_asn" | while IFS= read -r asn
+	printf "%s\n" "${list_asn}" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -- -i origin "$asn" | awk '/route:/ {print $2}'
+		whois -h "${fqdn_whois}" -- -i origin "${asn}" | awk '/route:/ {print $2}'
 	done
 }
 
 print_prefixes_ipv6()
 {
-	# Return list of IPv6 prefixes of specified ASN.
+	#  return list of ipv6 prefixes of specified asn.
 
-	whoisdomain="$1"
-	list_asn="$2"
-
-	printf "%s\n" "$list_asn" | while IFS= read -r asn
+	printf "%s\n" "${list_asn}" | while IFS= read -r asn
 	do
-		whois -h "$whoisdomain" -- -i origin "$asn" | awk '/route6:/ {print $2}'
+		whois -h "${fqdn_whois}" -- -i origin "${asn}" | awk '/route6:/ {print $2}'
 	done
 }
 
 print_linux_systemd_service_file()
 {
-	name_program="$1"
-	fpath_ruleset="$2"
-
 	cat <<EOF
 [Unit]
 Description=ASN prefix outbound traffic blocker
@@ -377,8 +333,8 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStartPre=/usr/sbin/nft -f "$fpath_ruleset"
-ExecStart=/usr/local/bin/$name_program create
+ExecStartPre=/usr/sbin/nft -f "${fpath_ruleset}"
+ExecStart=/usr/local/bin/${program} create
 
 [Install]
 WantedBy=multi-user.target
@@ -387,18 +343,15 @@ EOF
 
 print_openbsd_service_file()
 {
-	name_program="$1"
-	fpath_ruleset="$2"
-
 	cat <<EOF
 #!/bin/ksh
 
-daemon="$(dirname "$(readlink -f "$0")")/$name_program"
+daemon="$(dirname "$(readlink -f "$0")")/${program}"
 
 . /etc/rc.d/rc.subr
 
 rc_pre() {
-	\${rcexec} "(pfctl -a "$name_program" -f "$fpath_ruleset" &)"
+	\${rcexec} "(pfctl -a "${program}" -f "${fpath_ruleset}" &)"
 }
 
 rc_start() {
@@ -412,22 +365,19 @@ EOF
 usage()
 {
 	cat <<EOF
-usage: $(basename "$0") create|resume|show|stop
+usage: ${program} [c|create] [h|halt|stop] [r|resume] [s|show]
 
-  create
-      Create firewall ruleset and ruleset
-      persistency service.
+  c, create
+     create and start ruleset enforcement and persistence.
 
-  resume
-      Resume enforcement of cached firewall ruleset
-      and enable ruleset persistency service.
+  h, halt, stop
+     stop ruleset enforcement and persistence.
 
-  show
-      Show cached firewall ruleset.
+  r, resume
+     resume ruleset enforcement and persistence.
 
-  stop
-      Disable cached firewall ruleset and ruleset
-      persistency service.
+  s, show
+     show ruleset.
 EOF
 
 	exit 1
@@ -435,16 +385,38 @@ EOF
 
 wait_net_conn()
 {
-	# To account for system reboots and network connectivity delays
-	# thereafter, wait until a TCP connection to port 43 of the WHOIS
-	# host opens.
+	#  pause process until tcp port 43 of whois host is open. used to
+	#  account for system reboots and initial network connectivity delays.
 
-	whoisdomain="$1"
-
-	until nc -w 1 "$whoisdomain" 43 > /dev/null 2>&1
+	until nc -w 1 "${fqdn_whois}" 43 > /dev/null 2>&1
 	do
 		sleep 1
 	done
 }
 
-main "$@"
+if ! confirm_prerequisites "${fpath_conf}"
+then
+	exit 2
+fi
+
+case "$@" in
+	c|create)
+		confirm_root || exit 2
+		cmd_create
+		;;
+	s|show)
+		confirm_root || exit 2
+		cmd_show
+		;;
+	r|resume)
+		confirm_root || exit 2
+		cmd_resume
+		;;
+	h|halt|stop)
+		confirm_root || exit 2
+		cmd_halt
+		;;
+	h|help|*)
+		usage
+		;;
+esac

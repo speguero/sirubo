@@ -6,8 +6,8 @@ fpath_ruleset=$(dpath_conf)/$(fname_bin).ruleset
 fname_service_linux=$(fname_bin).service
 fpath_service_linux=/etc/systemd/system/$(fname_bin).service
 fpath_service_openbsd=/etc/rc.d/$(fname_bin)
-dpath_doc=/usr/local/share/doc/$(fname_bin)
-fpath_doc=/usr/local/share/doc/$(fname_bin)/README
+dpath_doc=/usr/local/share/doc
+fpath_doc=/usr/local/share/doc/$(fname_bin)/README.md
 os := $(shell uname -s)
 
 install:
@@ -15,7 +15,7 @@ install:
 	@# Configuration
 
 	if ! [ -d "$(dpath_conf)" ]; then \
-		mkdir "$(dpath_conf)"; \
+		mkdir -p "$(dpath_conf)"; \
 		chown 0:0 "$(dpath_conf)"; \
 		chmod u=rwx,go=rx "$(dpath_conf)"; \
 	fi
@@ -34,11 +34,12 @@ install:
 
 	if ! [ -d "$(dpath_doc)" ]; then \
 		mkdir "$(dpath_doc)"; \
-		chown 0:0 "$(dpath_doc)"; \
+		mkdir "$(dpath_doc)/$(fname_bin)"; \
+		chown -R 0:0 "$(dpath_doc)"; \
 		chmod u=rwx,go=rx "$(dpath_doc)"; \
 	fi
 
-	cp -vf "README" "$(fpath_doc)"
+	cp -vf "README.md" "$(fpath_doc)"
 	chown 0:0 "$(fpath_doc)"
 	chmod ugo=r "$(fpath_doc)"
 
