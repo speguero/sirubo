@@ -20,7 +20,6 @@
 - [Description](#description)
 - [Requirements](#requirements)
 - [Motive](#motive)
-- [Name Origin](#name-origin)
 - [Install](#install)
 - [Uninstall](#uninstall)
 - [Files](#files)
@@ -74,14 +73,6 @@ The sirubo utility is a POSIX shell script that makes use of:
 Preventing passive and nonconsensual telemetry, and the infringement of
 one's privacy thereafter, from intrusively inquisitive big tech
 conglomerates, such as Meta (Facebook) and Alphabet (Google).
-
-<br>
-
-# Name Origin
-
-Dissecting the etymology of sirubo (pronounced as <i>seer-rue-bow</i>), "<i>si</i>"
-refers to the silicon chemical symbol of "<i>Si</i>", referencing Silicon Valley.
-The word "<i>rubo</i>" derives from the Esperanto language, meaning "<i>trash</i>".
 
 <br>
 
